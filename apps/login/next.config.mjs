@@ -1,4 +1,10 @@
 import createNextIntlPlugin from "next-intl/plugin";
+import path from "path";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const monorepoRoot = path.resolve(__dirname, "../../");
 
 const withNextIntl = createNextIntlPlugin();
 
@@ -26,6 +32,10 @@ const secureHeaders = [
 const nextConfig = {
   basePath: process.env.NEXT_PUBLIC_BASE_PATH,
   output: process.env.NEXT_OUTPUT_MODE || undefined,
+  outputFileTracingRoot: monorepoRoot,
+  turbopack: {
+    root: monorepoRoot,
+  },
   reactStrictMode: true,
   experimental: {
     // Add React 19 compatibility optimizations
@@ -41,28 +51,22 @@ const nextConfig = {
   // incompatibilities. Keep this list in sync with package.json dependencies
   // when adding new OpenTelemetry or logging packages.
   serverExternalPackages: [
-    'winston',
-    '@opentelemetry/api',
-    '@opentelemetry/api-logs',
-    '@opentelemetry/sdk-node',
-    '@opentelemetry/sdk-metrics',
-    '@opentelemetry/sdk-logs',
-    '@opentelemetry/exporter-metrics-otlp-http',
-    '@opentelemetry/exporter-logs-otlp-http',
-    '@opentelemetry/exporter-prometheus',
-    '@opentelemetry/resources',
-    '@opentelemetry/semantic-conventions',
-    '@opentelemetry/auto-instrumentations-node',
-    '@opentelemetry/winston-transport',
-    '@opentelemetry/resource-detector-container',
-    '@opentelemetry/resource-detector-gcp',
+    "winston",
+    "@opentelemetry/api",
+    "@opentelemetry/api-logs",
+    "@opentelemetry/sdk-node",
+    "@opentelemetry/sdk-metrics",
+    "@opentelemetry/sdk-logs",
+    "@opentelemetry/exporter-metrics-otlp-http",
+    "@opentelemetry/exporter-logs-otlp-http",
+    "@opentelemetry/exporter-prometheus",
+    "@opentelemetry/resources",
+    "@opentelemetry/semantic-conventions",
+    "@opentelemetry/auto-instrumentations-node",
+    "@opentelemetry/winston-transport",
+    "@opentelemetry/resource-detector-container",
+    "@opentelemetry/resource-detector-gcp",
   ],
-  // Improve SSR stability - not actually needed for React 19 SSR issues
-  // onDemandEntries: {
-  //   maxInactiveAge: 25 * 1000,
-  //   pagesBufferLength: 2,
-  // },
-  // Better error handling for production builds
   poweredByHeader: false,
   async headers() {
     return [

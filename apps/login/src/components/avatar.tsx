@@ -1,8 +1,10 @@
 "use client";
 
 import { ColorShade, getColorHash } from "@/helpers/colors";
+import { getGravatarUrl } from "@/helpers/gravatar";
 import { getComponentRoundness } from "@/lib/theme";
 import { useTheme } from "next-themes";
+import { useState } from "react";
 
 interface AvatarProps {
   name: string | null | undefined;
@@ -37,6 +39,7 @@ function getAvatarRoundness(): string {
 
 export function Avatar({ size = "base", name, loginName, imageUrl, shadow }: AvatarProps) {
   const { resolvedTheme } = useTheme();
+  const [imageFailed, setImageFailed] = useState(false);
   const credentials = getInitials(name ?? loginName, loginName);
   const avatarRoundness = getAvatarRoundness();
 
@@ -52,9 +55,12 @@ export function Avatar({ size = "base", name, loginName, imageUrl, shadow }: Ava
     color: color[900],
   };
 
+  const gravatarUrl = getGravatarUrl(loginName);
+  const effectiveImageUrl = !imageFailed ? imageUrl || gravatarUrl : null;
+
   return (
     <div
-      className={`dark:group-focus:ring-offset-blue dark:text-blue bg-primary-light-500 text-primary-light-contrast-500 hover:bg-primary-light-400 group-focus:ring-primary-light-200 dark:bg-primary-dark-300 dark:text-primary-dark-contrast-300 hover:dark:bg-primary-dark-500 dark:group-focus:ring-primary-dark-400 pointer-events-none flex h-full w-full flex-shrink-0 cursor-default items-center justify-center transition-colors duration-200 group-focus:ring-2 group-focus:outline-none ${avatarRoundness} ${
+      className={`dark:group-focus:ring-offset-blue dark:text-blue bg-primary-light-500 text-primary-light-contrast-500 hover:bg-primary-light-400 group-focus:ring-primary-light-200 dark:bg-primary-dark-300 dark:text-primary-dark-contrast-300 hover:dark:bg-primary-dark-500 dark:group-focus:ring-primary-dark-400 pointer-events-none flex h-full w-full flex-shrink-0 cursor-default items-center justify-center overflow-hidden transition-colors duration-200 group-focus:ring-2 group-focus:outline-none ${avatarRoundness} ${
         shadow ? "shadow" : ""
       } ${
         size === "large"
@@ -67,13 +73,14 @@ export function Avatar({ size = "base", name, loginName, imageUrl, shadow }: Ava
       }`}
       style={resolvedTheme === "light" ? avatarStyleLight : avatarStyleDark}
     >
-      {imageUrl ? (
+      {effectiveImageUrl ? (
         <img
           height={48}
           width={48}
           alt="avatar"
-          className={`border-divider-light dark:border-divider-dark h-full w-full border ${avatarRoundness}`}
-          src={imageUrl}
+          className={`border-divider-light dark:border-divider-dark h-full w-full border object-cover ${avatarRoundness}`}
+          src={effectiveImageUrl}
+          onError={() => setImageFailed(true)}
         />
       ) : (
         <span className={`uppercase ${size === "large" ? "text-xl" : "text-13px"}`}>{credentials}</span>
