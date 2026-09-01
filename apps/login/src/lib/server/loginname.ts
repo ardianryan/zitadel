@@ -484,8 +484,6 @@ export async function sendLoginname(command: SendLoginnameCommand) {
         }
 
         return { redirect: "/passkey?" + passkeyParams };
-      } else if (methods.authMethodTypes.includes(AuthenticationMethodType.IDP)) {
-        return redirectUserToIDP(userId, organization);
       } else if (methods.authMethodTypes.includes(AuthenticationMethodType.PASSWORD)) {
         // Check if password authentication is allowed
         if (!userLoginSettings?.allowLocalAuthentication) {
@@ -497,7 +495,7 @@ export async function sendLoginname(command: SendLoginnameCommand) {
           };
         }
 
-        // user has no passkey setup and login settings allow passwords
+        // user has no passkey setup and typed their login name, route to password
         const paramsPasswordDefault = new URLSearchParams({
           loginName: redirectLoginName,
         });
@@ -513,6 +511,8 @@ export async function sendLoginname(command: SendLoginnameCommand) {
         return {
           redirect: "/password?" + paramsPasswordDefault,
         };
+      } else if (methods.authMethodTypes.includes(AuthenticationMethodType.IDP)) {
+        return redirectUserToIDP(userId, organization);
       }
     }
   }

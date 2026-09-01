@@ -437,20 +437,19 @@ describe("sendLoginname", () => {
         });
       });
 
-      test("should redirect to IDP when no passkey but IDP available", async () => {
+      test("should redirect to password when user has password and IDP available", async () => {
         mockListAuthenticationMethodTypes.mockResolvedValue({
           authMethodTypes: [AuthenticationMethodType.PASSWORD, AuthenticationMethodType.IDP],
         });
         mockListIDPLinks.mockResolvedValue({
           result: [{ idpId: "idp123" }],
         });
-        mockStartIdentityProviderFlow.mockResolvedValue({ url: "https://idp.example.com/auth" });
 
         const result = await sendLoginname({
           loginName: "user@example.com",
         });
 
-        expect(result).toEqual({ redirect: "https://idp.example.com/auth" });
+        expect(result).toEqual({ redirect: "/password?loginName=user%40example.com&organization=org123" });
       });
 
       test("should redirect to password when no passkey or IDP, only password available and allowed", async () => {

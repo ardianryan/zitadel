@@ -9,7 +9,7 @@ import { Lang, LANGS } from "@/lib/i18n";
 import { resolveLocalizedLegalLink } from "@/lib/legal-links";
 import { BrandingSettings } from "@zitadel/proto/zitadel/settings/v2/branding_settings_pb";
 import { LegalAndSupportSettings } from "@zitadel/proto/zitadel/settings/v2/legal_settings_pb";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import React, { Children, ReactNode } from "react";
 import { ThemeWrapper } from "./theme-wrapper";
 
@@ -20,17 +20,28 @@ type Props = {
   appName?: string;
   legal?: LegalAndSupportSettings;
   allowedLanguages?: Lang[];
+  bannerPosition?: "left" | "right";
 };
 
 /**
- * DynamicTheme renders the true Kredensia-SSO Edu-Variant layout:
- * - Desktop (>= 1024px): Fullscreen 50/50 dual pane.
- *   - Left: Full-height signature Kotak Biru with constellation net, floating carousel & slogan.
- *   - Right: Full-height clean form container with footer & controls.
+ * DynamicTheme renders the authentic Kredensia-SSO Edu-Variant layout:
+ * - Login Flow (bannerPosition="right"):
+ *   - Form on Left (order-1), Kotak Biru on Right (order-2, rounded-left).
+ * - Registration / Forgot Password / Verification (bannerPosition="left"):
+ *   - Kotak Biru on Left (order-1, rounded-right), Form on Right (order-2).
  * - Mobile (< 1024px): Full-screen responsive layout with EduMobileHeader.
  */
-export function DynamicTheme({ branding, children, orgName, appName, legal, allowedLanguages }: Props) {
+export function DynamicTheme({
+  branding,
+  children,
+  orgName,
+  appName,
+  legal,
+  allowedLanguages,
+  bannerPosition = "right",
+}: Props) {
   const locale = useLocale();
+  const tEdu = useTranslations("edu");
 
   const actualChildren: ReactNode = React.useMemo(() => {
     if (typeof children === "function") {
@@ -60,16 +71,32 @@ export function DynamicTheme({ branding, children, orgName, appName, legal, allo
   const rightContent = childArray[1] || null;
   const hasLeftRightStructure = childArray.length === 2;
 
+  const isBannerRight = bannerPosition === "right";
+
   return (
     <ThemeWrapper branding={branding}>
       <div className="relative flex min-h-screen w-full flex-col overflow-x-hidden bg-white transition-colors lg:flex-row dark:bg-slate-900">
-        {/* Left Pane: Kotak Biru Edu Banner (Desktop Full-Height) */}
-        <div className="relative hidden w-full bg-white lg:flex lg:w-1/2 dark:bg-slate-900">
-          <EduBanner orgName={displayName} appName={displayApp} branding={branding} legal={legal} />
+        {/* Kotak Biru Edu Banner (Desktop Full-Height) */}
+        <div
+          className={`relative hidden w-full bg-white lg:flex lg:w-1/2 dark:bg-slate-900 ${
+            isBannerRight ? "order-2" : "order-1"
+          }`}
+        >
+          <EduBanner
+            orgName={displayName}
+            appName={displayApp}
+            branding={branding}
+            legal={legal}
+            position={bannerPosition}
+          />
         </div>
 
-        {/* Right Pane: Form & Interactive Area */}
-        <div className="relative flex min-h-screen w-full flex-col justify-between bg-white px-6 py-6 sm:px-10 sm:py-8 lg:w-1/2 lg:px-14 lg:py-10 dark:bg-slate-900">
+        {/* Form & Interactive Area */}
+        <div
+          className={`relative flex min-h-screen w-full flex-col justify-between bg-white px-6 py-6 sm:px-10 sm:py-8 lg:w-1/2 lg:px-14 lg:py-10 dark:bg-slate-900 ${
+            isBannerRight ? "order-1" : "order-2"
+          }`}
+        >
           {/* Top: Mobile Header for < 1024px */}
           <div>
             <EduMobileHeader appName={displayApp} branding={branding} />
@@ -98,7 +125,7 @@ export function DynamicTheme({ branding, children, orgName, appName, legal, allo
                     rel="noreferrer"
                     className="transition-colors hover:text-slate-700 hover:underline dark:hover:text-slate-200"
                   >
-                    Ketentuan Layanan
+                    {tEdu("termsOfService")}
                   </a>
                 )}
                 {privacyPolicyLink && (
@@ -108,12 +135,12 @@ export function DynamicTheme({ branding, children, orgName, appName, legal, allo
                     rel="noreferrer"
                     className="transition-colors hover:text-slate-700 hover:underline dark:hover:text-slate-200"
                   >
-                    Kebijakan Privasi
+                    {tEdu("privacyPolicy")}
                   </a>
                 )}
                 {helpLink && (
                   <a href={helpLink} target="_blank" rel="noreferrer" className="font-medium text-[#0F91FC] hover:underline">
-                    Bantuan
+                    {tEdu("help")}
                   </a>
                 )}
                 {supportEmail && (
@@ -121,7 +148,7 @@ export function DynamicTheme({ branding, children, orgName, appName, legal, allo
                     href={`mailto:${supportEmail}`}
                     className="transition-colors hover:text-slate-700 hover:underline dark:hover:text-slate-200"
                   >
-                    Email Dukungan
+                    {tEdu("supportEmail")}
                   </a>
                 )}
               </div>
@@ -143,7 +170,7 @@ export function DynamicTheme({ branding, children, orgName, appName, legal, allo
                       className="flex items-center gap-1.5 opacity-85 transition-opacity hover:opacity-100"
                     >
                       <span className="text-[11px] font-normal text-slate-400 dark:text-slate-500">Powered by</span>
-                      <ZitadelLogo height={18} width={68} />
+                      <ZitadelLogo height={20} width={75} />
                     </a>
                   </>
                 )}

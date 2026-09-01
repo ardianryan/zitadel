@@ -19,9 +19,27 @@ import { getLocale, getTranslations } from "next-intl/server";
 import { headers } from "next/headers";
 import Link from "next/link";
 
-export async function generateMetadata(): Promise<Metadata> {
+export async function generateMetadata(props: {
+  searchParams: Promise<Record<string | number | symbol, string | undefined>>;
+}): Promise<Metadata> {
+  const searchParams = await props.searchParams;
+  const organization = searchParams?.organization;
+  const _headers = await headers();
+  const { serviceConfig } = getServiceConfig(_headers);
+
+  let activeOrg: Organization | null = null;
+  if (organization) {
+    activeOrg = await getOrgById({ serviceConfig, orgId: organization });
+  }
+  if (!activeOrg) {
+    activeOrg = await getDefaultOrg({ serviceConfig });
+  }
+
+  const orgName = activeOrg?.name;
   const t = await getTranslations("loginname");
-  return { title: t("title") };
+  return {
+    title: orgName ? `${orgName} - ${t("title")}` : t("title"),
+  };
 }
 
 export default async function Page(props: { searchParams: Promise<Record<string | number | symbol, string | undefined>> }) {
@@ -75,6 +93,8 @@ export default async function Page(props: { searchParams: Promise<Record<string 
   const hasIdp = loginSettings?.allowExternalIdp && !!identityProviders?.length;
   const hasLocal = loginSettings?.allowLocalAuthentication;
 
+  const tEdu = await getTranslations("edu");
+
   return (
     <DynamicTheme
       branding={branding}
@@ -85,11 +105,9 @@ export default async function Page(props: { searchParams: Promise<Record<string 
     >
       <div className="flex flex-col space-y-1.5 text-left">
         <h1 className="text-xl font-black tracking-tight text-[#081242] sm:text-2xl dark:text-white">
-          Single Account, Single Sign On login
+          {tEdu("singleSignOnTitle")}
         </h1>
-        <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
-          Masuk untuk mengakses seluruh ekosistem layanan pembelajaran terpadu.
-        </p>
+        <p className="text-xs font-medium text-slate-500 dark:text-slate-400">{tEdu("singleSignOnSubtitle")}</p>
       </div>
 
       <div className="w-full space-y-5 text-left">
@@ -109,14 +127,14 @@ export default async function Page(props: { searchParams: Promise<Record<string 
               {helpLink && (
                 <>
                   <a href={helpLink} target="_blank" rel="noreferrer" className="transition-colors hover:text-[#0F91FC]">
-                    Bantuan / Verifikasi Akun
+                    {tEdu("helpAndVerification")}
                   </a>
                   <span className="text-slate-300 dark:text-slate-600">•</span>
                 </>
               )}
               {loginSettings?.allowRegister && (
                 <Link href="/register" className="transition-colors hover:text-[#0F91FC]">
-                  Daftar Akun Baru
+                  {tEdu("registerNewAccount")}
                 </Link>
               )}
             </div>
@@ -128,7 +146,7 @@ export default async function Page(props: { searchParams: Promise<Record<string 
           <div className="relative flex items-center justify-center py-2 select-none">
             <div className="w-full border-t border-slate-200 dark:border-slate-700"></div>
             <span className="absolute bg-white px-3 text-[11px] font-semibold text-slate-400 dark:bg-slate-900 dark:text-slate-500">
-              Atau masuk dengan surel / nama akun
+              {tEdu("orSignInWithEmail")}
             </span>
           </div>
         )}

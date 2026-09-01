@@ -459,5 +459,18 @@
     "tryagain": "Try Again",
     "couldNotContinueSession": "Could not continue with session - missing user information",
     "couldNotClearSession": "Could not end the session. Please try again."
+  },
+  "edu": {
+    "portalTagline": "INTEGRATED IDENTITY SERVICE PORTAL",
+    "welcome": "Welcome to {orgName}",
+    "singleSignOnTitle": "Single Account, Single Sign On login",
+    "singleSignOnSubtitle": "Log in to access the integrated learning ecosystem.",
+    "orSignInWithEmail": "Or log in with email / username",
+    "helpAndVerification": "Help / Account Verification",
+    "registerNewAccount": "Register New Account",
+    "termsOfService": "Terms of Service",
+    "privacyPolicy": "Privacy Policy",
+    "help": "Help",
+    "supportEmail": "Support Email"
   }
 }

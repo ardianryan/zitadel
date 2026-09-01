@@ -61,7 +61,7 @@ export default async function Page(props: { searchParams: Promise<Record<string 
 
   if (!loginSettings) {
     return (
-      <DynamicTheme branding={branding} orgName={orgName} appName={orgName || "ZITADEL"} legal={legal}>
+      <DynamicTheme branding={branding} orgName={orgName} appName={orgName || "ZITADEL"} legal={legal} bannerPosition="left">
         <div className="flex flex-col space-y-4">
           <h1>
             <Translated i18nKey="title" namespace="register" />
@@ -77,7 +77,7 @@ export default async function Page(props: { searchParams: Promise<Record<string 
 
   if (!loginSettings?.allowRegister && (!loginSettings.allowExternalIdp || identityProviders.length === 0)) {
     return (
-      <DynamicTheme branding={branding} orgName={orgName} appName={orgName || "ZITADEL"} legal={legal}>
+      <DynamicTheme branding={branding} orgName={orgName} appName={orgName || "ZITADEL"} legal={legal} bannerPosition="left">
         <RegistrationDisabledCard orgName={orgName} legal={legal} loginUrl={loginUrl} />
       </DynamicTheme>
     );

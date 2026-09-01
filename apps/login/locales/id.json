@@ -293,5 +293,18 @@
   "error": {
     "unknownContext": "Konteks login tidak valid atau telah kadaluarsa. Silakan mulai ulang login Anda.",
     "general": "Terjadi kesalahan pada sistem. Silakan coba beberapa saat lagi."
+  },
+  "edu": {
+    "portalTagline": "PORTAL LAYANAN IDENTITAS TERPADU",
+    "welcome": "Selamat Datang di {orgName}",
+    "singleSignOnTitle": "Single Account, Single Sign On login",
+    "singleSignOnSubtitle": "Masuk untuk mengakses seluruh ekosistem layanan pembelajaran terpadu.",
+    "orSignInWithEmail": "Atau masuk dengan surel / nama akun",
+    "helpAndVerification": "Bantuan / Verifikasi Akun",
+    "registerNewAccount": "Daftar Akun Baru",
+    "termsOfService": "Ketentuan Layanan",
+    "privacyPolicy": "Kebijakan Privasi",
+    "help": "Bantuan",
+    "supportEmail": "Email Dukungan"
   }
 }

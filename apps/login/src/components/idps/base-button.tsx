@@ -1,6 +1,5 @@
 "use client";
 
-import { APPEARANCE_STYLES, getComponentRoundness, getThemeConfig } from "@/lib/theme";
 import { clsx } from "clsx";
 import { Loader2Icon } from "lucide-react";
 import { ButtonHTMLAttributes, DetailedHTMLProps, forwardRef } from "react";
@@ -14,17 +13,8 @@ export type SignInWithIdentityProviderProps = DetailedHTMLProps<
   e2e?: string;
 };
 
-// Helper function to get default IDP button appearance from centralized theme system
-function getDefaultIdpButtonAppearance(): string {
-  const themeConfig = getThemeConfig();
-  const appearance = APPEARANCE_STYLES[themeConfig.appearance];
-  return appearance?.["idp-button"] || "border border-divider-light dark:border-divider-dark"; // Fallback to basic border
-}
-
 export const BaseButton = forwardRef<HTMLButtonElement, SignInWithIdentityProviderProps>(function BaseButton(props, ref) {
   const formStatus = useFormStatus();
-  const buttonRoundness = getComponentRoundness("button");
-  const idpButtonAppearance = getDefaultIdpButtonAppearance();
 
   return (
     <button
@@ -33,16 +23,13 @@ export const BaseButton = forwardRef<HTMLButtonElement, SignInWithIdentityProvid
       ref={ref}
       disabled={formStatus.pending}
       className={clsx(
-        `text-text-light-500 focus:border-primary-light-500 dark:text-text-dark-500 focus:dark:border-primary-dark-500 flex flex-1 cursor-pointer flex-row items-center px-4 text-sm transition-all outline-none hover:border-black hover:dark:border-white`,
-        buttonRoundness,
-        idpButtonAppearance,
-        `bg-background-light-400 dark:bg-background-dark-500`, // Keep background as fallback for non-glass themes
+        "flex w-full cursor-pointer flex-row items-center justify-center gap-2.5 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition-all hover:border-slate-300 hover:bg-slate-50 hover:shadow active:scale-[0.99] dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:border-slate-600 dark:hover:bg-slate-700/80",
         props.className,
       )}
     >
-      <div className="flex flex-1 items-center justify-between gap-4">
-        <div className="flex flex-1 flex-row items-center">{props.children}</div>
-        {formStatus.pending && <Loader2Icon className="h-4 w-4 animate-spin" />}
+      <div className="flex flex-1 items-center justify-center gap-2.5">
+        <div className="flex items-center justify-center">{props.children}</div>
+        {formStatus.pending && <Loader2Icon className="h-4 w-4 shrink-0 animate-spin text-slate-400" />}
       </div>
     </button>
   );

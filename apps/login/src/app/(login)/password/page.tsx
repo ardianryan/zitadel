@@ -11,9 +11,27 @@ import { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { headers } from "next/headers";
 
-export async function generateMetadata(): Promise<Metadata> {
+export async function generateMetadata(props: {
+  searchParams: Promise<Record<string | number | symbol, string | undefined>>;
+}): Promise<Metadata> {
+  const searchParams = await props.searchParams;
+  const organization = searchParams?.organization;
+  const _headers = await headers();
+  const { serviceConfig } = getServiceConfig(_headers);
+
+  let activeOrg: Organization | null = null;
+  if (organization) {
+    activeOrg = await getOrgById({ serviceConfig, orgId: organization });
+  }
+  if (!activeOrg) {
+    activeOrg = await getDefaultOrg({ serviceConfig });
+  }
+
+  const orgName = activeOrg?.name;
   const t = await getTranslations("password");
-  return { title: t("verify.title") };
+  return {
+    title: orgName ? `${orgName} - ${t("verify.title")}` : t("verify.title"),
+  };
 }
 
 export default async function Page(props: { searchParams: Promise<Record<string | number | symbol, string | undefined>> }) {

@@ -32,7 +32,7 @@ export function SignInWithIdp({
   organization,
   sessionId,
   postErrorRedirectUrl,
-  showLabel = true,
+  showLabel = false,
 }: Readonly<SignInWithIDPProps>) {
   const [state, action, _isPending] = useActionState(redirectToIdp, {});
 
@@ -57,7 +57,7 @@ export function SignInWithIdp({
 
     const Component = components[type];
     return Component ? (
-      <form action={action} className="flex" key={`idp-${index}`}>
+      <form action={action} className="flex w-full" key={`idp-${index}`}>
         <input type="hidden" name="id" value={id} />
         <input type="hidden" name="provider" value={idpTypeToSlug(type)} />
         <input type="hidden" name="requestId" value={requestId} />
@@ -69,15 +69,21 @@ export function SignInWithIdp({
     ) : null;
   };
 
+  const isMultiGrid = (identityProviders?.length || 0) >= 2;
+
   return (
-    <div className="flex w-full flex-col space-y-2 text-sm">
+    <div className="flex w-full flex-col space-y-3 text-sm">
       {state?.samlData && <AutoSubmitForm url={state.samlData.url} fields={state.samlData.fields} />}
       {showLabel && (
-        <p className="ztdl-p text-center">
+        <p className="ztdl-p text-center text-xs font-semibold text-slate-400 dark:text-slate-500">
           <Translated i18nKey="orSignInWith" namespace="idp" />
         </p>
       )}
-      {!!identityProviders?.length && identityProviders?.map(renderIDPButton)}
+
+      <div className={isMultiGrid ? "grid w-full grid-cols-1 gap-2.5 sm:grid-cols-2" : "flex w-full flex-col space-y-2.5"}>
+        {!!identityProviders?.length && identityProviders?.map(renderIDPButton)}
+      </div>
+
       {state?.error && (
         <div className="py-4">
           <Alert>{state?.error}</Alert>

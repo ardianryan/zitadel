@@ -122,15 +122,17 @@ export function PasswordForm({ loginSettings, loginName, organization, defaultOr
             data-testid="password-text-input"
           />
           {!loginSettings?.hidePasswordReset && (
-            <button
-              className="hover:text-primary-light-500 dark:hover:text-primary-dark-500 text-sm transition-all"
-              onClick={() => resetPasswordAndContinue()}
-              type="button"
-              disabled={loading}
-              data-testid="reset-button"
-            >
-              <Translated i18nKey="verify.resetPassword" namespace="password" />
-            </button>
+            <div className="mt-2 text-right">
+              <button
+                className="text-xs font-semibold text-[#0F91FC] transition-colors hover:underline dark:text-[#38BDF8]"
+                onClick={() => resetPasswordAndContinue()}
+                type="button"
+                disabled={loading}
+                data-testid="reset-button"
+              >
+                <Translated i18nKey="verify.resetPassword" namespace="password" />
+              </button>
+            </div>
           )}
 
           {loginName && <input type="hidden" name="loginName" autoComplete="username" value={loginName} />}
