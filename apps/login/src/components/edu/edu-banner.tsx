@@ -4,7 +4,6 @@ import { resolveLocalizedLegalLink } from "@/lib/legal-links";
 import { BrandingSettings } from "@zitadel/proto/zitadel/settings/v2/branding_settings_pb";
 import { LegalAndSupportSettings } from "@zitadel/proto/zitadel/settings/v2/legal_settings_pb";
 import { useLocale } from "next-intl";
-import Link from "next/link";
 import { useEffect, useState } from "react";
 import { ParticleCanvas } from "./particle-canvas";
 
@@ -50,6 +49,7 @@ export function EduBanner({ orgName, appName, branding, legal, className = "" }:
 
   const privacyPolicyLink = resolveLocalizedLegalLink(legal?.privacyPolicyLink, locale);
   const tosLink = resolveLocalizedLegalLink(legal?.tosLink, locale);
+  const helpLink = resolveLocalizedLegalLink(legal?.helpLink, locale);
 
   return (
     <div
@@ -109,30 +109,43 @@ export function EduBanner({ orgName, appName, branding, legal, className = "" }:
         {/* Organization Name & Legal Links */}
         <p className="flex flex-wrap items-center justify-center gap-1.5 text-[10px] font-bold tracking-wider text-white/90 uppercase sm:text-[11px]">
           <span>{displayName}</span>
-          {privacyPolicyLink ? (
-            <>
-              <span className="text-white/50">|</span>
-              <Link
-                href={privacyPolicyLink}
-                target="_blank"
-                rel="noreferrer"
-                className="cursor-pointer transition-all hover:text-white hover:underline"
-              >
-                Privacy Policy
-              </Link>
-            </>
-          ) : null}
           {tosLink ? (
             <>
-              <span className="text-white/50">|</span>
-              <Link
+              <span className="text-white/50">•</span>
+              <a
                 href={tosLink}
                 target="_blank"
                 rel="noreferrer"
                 className="cursor-pointer transition-all hover:text-white hover:underline"
               >
-                Terms of Service
-              </Link>
+                Ketentuan Layanan
+              </a>
+            </>
+          ) : null}
+          {privacyPolicyLink ? (
+            <>
+              <span className="text-white/50">•</span>
+              <a
+                href={privacyPolicyLink}
+                target="_blank"
+                rel="noreferrer"
+                className="cursor-pointer transition-all hover:text-white hover:underline"
+              >
+                Kebijakan Privasi
+              </a>
+            </>
+          ) : null}
+          {helpLink ? (
+            <>
+              <span className="text-white/50">•</span>
+              <a
+                href={helpLink}
+                target="_blank"
+                rel="noreferrer"
+                className="cursor-pointer transition-all hover:text-white hover:underline"
+              >
+                Bantuan
+              </a>
             </>
           ) : null}
         </p>

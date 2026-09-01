@@ -2,8 +2,10 @@
 
 import { EduBanner } from "@/components/edu/edu-banner";
 import { EduMobileHeader } from "@/components/edu/edu-mobile-header";
+import { resolveLocalizedLegalLink } from "@/lib/legal-links";
 import { BrandingSettings } from "@zitadel/proto/zitadel/settings/v2/branding_settings_pb";
 import { LegalAndSupportSettings } from "@zitadel/proto/zitadel/settings/v2/legal_settings_pb";
+import { useLocale } from "next-intl";
 import React, { Children, ReactNode } from "react";
 import { ThemeWrapper } from "./theme-wrapper";
 
@@ -21,6 +23,8 @@ type Props = {
  * - Mobile (< 1024px): Clean card layout with EduMobileHeader
  */
 export function DynamicTheme({ branding, children, orgName, appName, legal }: Props) {
+  const locale = useLocale();
+
   const actualChildren: ReactNode = React.useMemo(() => {
     if (typeof children === "function") {
       return (children as (isSideBySide: boolean) => ReactNode)(true);
@@ -30,6 +34,11 @@ export function DynamicTheme({ branding, children, orgName, appName, legal }: Pr
 
   const displayName = orgName || "ZITADEL";
   const displayApp = appName || "ZITADEL";
+
+  const privacyPolicyLink = resolveLocalizedLegalLink(legal?.privacyPolicyLink, locale);
+  const tosLink = resolveLocalizedLegalLink(legal?.tosLink, locale);
+  const helpLink = resolveLocalizedLegalLink(legal?.helpLink, locale);
+  const supportEmail = legal?.supportEmail;
 
   const childArray = Children.toArray(actualChildren);
   const leftContent = childArray[0] || null;
@@ -46,20 +55,61 @@ export function DynamicTheme({ branding, children, orgName, appName, legal }: Pr
           </div>
 
           {/* Right side: Form Container */}
-          <div className="relative flex w-full flex-col justify-center px-6 py-8 sm:px-10 lg:w-1/2 lg:px-14 lg:py-12">
-            {/* Mobile header visible on <1024px */}
-            <EduMobileHeader appName={displayApp} branding={branding} />
+          <div className="relative flex w-full flex-col justify-between px-6 py-8 sm:px-10 lg:w-1/2 lg:px-14 lg:py-12">
+            <div>
+              {/* Mobile header visible on <1024px */}
+              <EduMobileHeader appName={displayApp} branding={branding} />
 
-            <div className="mx-auto w-full max-w-md space-y-6">
-              {hasLeftRightStructure ? (
-                <>
-                  <div className="space-y-2">{leftContent}</div>
-                  <div>{rightContent}</div>
-                </>
-              ) : (
-                <div>{actualChildren}</div>
-              )}
+              <div className="mx-auto w-full max-w-md space-y-6 pt-2">
+                {hasLeftRightStructure ? (
+                  <>
+                    <div className="space-y-2">{leftContent}</div>
+                    <div>{rightContent}</div>
+                  </>
+                ) : (
+                  <div>{actualChildren}</div>
+                )}
+              </div>
             </div>
+
+            {/* Bottom Footer with External / Legal Links from Organization Settings */}
+            {(tosLink || privacyPolicyLink || helpLink || supportEmail) && (
+              <div className="mt-8 flex flex-wrap items-center justify-center gap-x-4 gap-y-1.5 pt-4 text-center text-xs text-slate-400 dark:text-slate-500">
+                {tosLink && (
+                  <a
+                    href={tosLink}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="transition-colors hover:text-slate-700 hover:underline dark:hover:text-slate-200"
+                  >
+                    Ketentuan Layanan
+                  </a>
+                )}
+                {privacyPolicyLink && (
+                  <a
+                    href={privacyPolicyLink}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="transition-colors hover:text-slate-700 hover:underline dark:hover:text-slate-200"
+                  >
+                    Kebijakan Privasi
+                  </a>
+                )}
+                {helpLink && (
+                  <a href={helpLink} target="_blank" rel="noreferrer" className="font-medium text-[#0F91FC] hover:underline">
+                    Bantuan
+                  </a>
+                )}
+                {supportEmail && (
+                  <a
+                    href={`mailto:${supportEmail}`}
+                    className="transition-colors hover:text-slate-700 hover:underline dark:hover:text-slate-200"
+                  >
+                    Email Dukungan
+                  </a>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </div>

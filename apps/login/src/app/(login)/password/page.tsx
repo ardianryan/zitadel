@@ -5,7 +5,7 @@ import { Translated } from "@/components/translated";
 import { UserAvatar } from "@/components/user-avatar";
 import { getServiceConfig } from "@/lib/service-url";
 import { loadMostRecentSession } from "@/lib/session";
-import { getBrandingSettings, getDefaultOrg, getLoginSettings } from "@/lib/zitadel";
+import { getBrandingSettings, getDefaultOrg, getLegalAndSupportSettings, getLoginSettings, getOrgById } from "@/lib/zitadel";
 import { Organization } from "@zitadel/proto/zitadel/org/v2/org_pb";
 import { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
@@ -23,14 +23,16 @@ export default async function Page(props: { searchParams: Promise<Record<string 
   const _headers = await headers();
   const { serviceConfig } = getServiceConfig(_headers);
 
-  let defaultOrganization;
-  if (!organization) {
-    const org: Organization | null = await getDefaultOrg({ serviceConfig });
-
-    if (org) {
-      defaultOrganization = org.id;
-    }
+  let activeOrg: Organization | null = null;
+  if (organization) {
+    activeOrg = await getOrgById({ serviceConfig, orgId: organization });
   }
+  if (!activeOrg) {
+    activeOrg = await getDefaultOrg({ serviceConfig });
+  }
+
+  const defaultOrganization = activeOrg?.id;
+  const orgName = activeOrg?.name || "ZITADEL";
 
   // also allow no session to be found (ignoreUnkownUsername)
   const sessionFactors = await loadMostRecentSession({
@@ -41,22 +43,28 @@ export default async function Page(props: { searchParams: Promise<Record<string 
     },
   });
 
+  const effectiveOrgId = organization ?? sessionFactors?.factors?.user?.organizationId ?? defaultOrganization;
+
   const branding = await getBrandingSettings({
     serviceConfig,
-    organization: organization ?? sessionFactors?.factors?.user?.organizationId ?? defaultOrganization,
+    organization: effectiveOrgId,
   });
   const loginSettings = await getLoginSettings({
     serviceConfig,
-    organization: organization ?? sessionFactors?.factors?.user?.organizationId ?? defaultOrganization,
+    organization: effectiveOrgId,
+  });
+  const legal = await getLegalAndSupportSettings({
+    serviceConfig,
+    organization: effectiveOrgId,
   });
 
   return (
-    <DynamicTheme branding={branding}>
+    <DynamicTheme branding={branding} orgName={orgName} appName={orgName || "ZITADEL"} legal={legal}>
       <div className="flex flex-col space-y-4">
-        <h1>
+        <h1 className="text-xl font-extrabold tracking-tight text-[#081242] sm:text-2xl dark:text-white">
           <Translated i18nKey="verify.title" namespace="password" />
         </h1>
-        <p className="ztdl-p">
+        <p className="text-xs leading-relaxed font-medium text-slate-500 dark:text-slate-400">
           <Translated i18nKey="verify.description" namespace="password" />
         </p>
 
@@ -89,7 +97,7 @@ export default async function Page(props: { searchParams: Promise<Record<string 
           <PasswordForm
             loginName={loginName}
             requestId={requestId}
-            organization={organization} // stick to "organization" as we still want to do user discovery based on the searchParams not the default organization, later the organization is determined by the found user
+            organization={organization}
             defaultOrganization={defaultOrganization}
             loginSettings={loginSettings}
           />
