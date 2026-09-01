@@ -1,9 +1,10 @@
 import "@/styles/globals.scss";
 
 import { LanguageProvider } from "@/components/language-provider";
+import { PersistentEduLayout } from "@/components/persistent-edu-layout";
 import { ThemeProvider } from "@/components/theme-provider";
 import { getServiceConfig } from "@/lib/service-url";
-import { getDefaultOrg } from "@/lib/zitadel";
+import { getBrandingSettings, getDefaultOrg, getLegalAndSupportSettings } from "@/lib/zitadel";
 import * as Tooltip from "@radix-ui/react-tooltip";
 import type { Metadata } from "next";
 import { Lato } from "next/font/google";
@@ -29,6 +30,15 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const _headers = await headers();
+  const { serviceConfig } = getServiceConfig(_headers);
+  const activeOrg = await getDefaultOrg({ serviceConfig });
+  const orgName = activeOrg?.name || "ZITADEL";
+  const defaultOrgId = activeOrg?.id;
+
+  const branding = await getBrandingSettings({ serviceConfig, organization: defaultOrgId });
+  const legal = await getLegalAndSupportSettings({ serviceConfig, organization: defaultOrgId });
+
   return (
     <html className={`${lato.className}`} suppressHydrationWarning>
       <head />
@@ -37,9 +47,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           <Tooltip.Provider>
             <Suspense fallback={<div className="min-h-screen w-full bg-white dark:bg-slate-900" />}>
               <LanguageProvider>
-                <div className="relative flex min-h-screen w-full flex-col bg-white transition-colors dark:bg-slate-900">
+                <PersistentEduLayout branding={branding} orgName={orgName} appName={orgName} legal={legal}>
                   {children}
-                </div>
+                </PersistentEduLayout>
               </LanguageProvider>
             </Suspense>
           </Tooltip.Provider>
