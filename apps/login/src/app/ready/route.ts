@@ -15,8 +15,12 @@ export async function GET() {
   }
 
   try {
+    const instanceHost = process.env.ZITADEL_INSTANCE_HOST
+      ? process.env.ZITADEL_INSTANCE_HOST.replace(/^https?:\/\//, "")
+      : undefined;
     const settingsService: Client<typeof SettingsService> = await createServiceForHost(SettingsService, {
       baseUrl: process.env.ZITADEL_API_URL,
+      ...(instanceHost && { instanceHost }),
     });
     await settingsService.getGeneralSettings({});
     return new NextResponse("OK", {
