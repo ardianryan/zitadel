@@ -86,7 +86,7 @@ export function DynamicTheme({ branding, children, orgName, appName, legal, allo
             )}
           </div>
 
-          {/* Bottom: Organization External Links & Controls (Language & Theme) */}
+          {/* Bottom: Organization External Links & Controls (Language, Theme & Watermark) */}
           <div className="w-full pt-4">
             {(tosLink || privacyPolicyLink || helpLink || supportEmail) && (
               <div className="mb-4 flex flex-wrap items-center justify-center gap-x-4 gap-y-1.5 text-center text-xs text-slate-400 dark:text-slate-500">
@@ -126,11 +126,27 @@ export function DynamicTheme({ branding, children, orgName, appName, legal, allo
               </div>
             )}
 
-            {/* Language Switcher & Dark/Light Mode Switch */}
+            {/* Language Switcher, Theme Switch & Subtle Watermark */}
             <div className="flex flex-row items-center justify-between border-t border-slate-100 pt-3 dark:border-slate-800">
-              <span className="text-[11px] font-semibold text-slate-400 dark:text-slate-500">
-                {displayName} © {new Date().getFullYear()}
-              </span>
+              <div className="flex flex-wrap items-center gap-2 text-[11px] font-semibold text-slate-400 dark:text-slate-500">
+                <span>
+                  {displayName} © {new Date().getFullYear()}
+                </span>
+                {!branding?.disableWatermark && (
+                  <>
+                    <span className="text-slate-300 dark:text-slate-600">•</span>
+                    <a
+                      href="https://zitadel.com"
+                      target="_blank"
+                      rel="noreferrer"
+                      className="flex items-center gap-1 font-medium transition-colors hover:text-slate-700 dark:hover:text-slate-300"
+                    >
+                      <span>Powered by</span>
+                      <span className="font-bold text-[#0F91FC]">ZITADEL</span>
+                    </a>
+                  </>
+                )}
+              </div>
               <div className="flex items-center gap-3">
                 <LanguageSwitcher languages={activeLangs} />
                 <ThemeSwitch />
