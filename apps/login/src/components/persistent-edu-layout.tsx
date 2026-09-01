@@ -25,10 +25,12 @@ type Props = {
 
 /**
  * PersistentEduLayout wraps the entire (login) application tree at layout.tsx.
- * Because layout.tsx remains mounted across page transitions in Next.js:
- * - EduBanner & ParticleCanvas NEVER unmount or flicker.
- * - When navigating between Login (/loginname, /password) and Register/Reset (/register, /password/set, /verify):
- *   usePathname() triggers a continuous, hardware-accelerated 700ms cubic-bezier slide across the viewport!
+ * - EduBanner & ParticleCanvas remain permanently mounted across page transitions.
+ * - Sided sliding animation triggers smoothly on pathname changes without unmounting.
+ * - Mobile UI/UX footer is arranged in clean visual hierarchy:
+ *   1. Legal & Support Links
+ *   2. Interactive Controls (Language Switcher & Theme Switch)
+ *   3. Copyright & Official Attribution
  */
 export function PersistentEduLayout({ branding, children, orgName, appName, legal, allowedLanguages }: Props) {
   const locale = useLocale();
@@ -97,7 +99,7 @@ export function PersistentEduLayout({ branding, children, orgName, appName, lega
           {/* Center: Main Form Content */}
           <div className="mx-auto my-auto w-full max-w-md space-y-6 py-6">{children}</div>
 
-          {/* Bottom: Organization External Links & Controls (Language, Theme & Watermark) */}
+          {/* Bottom: Organization External Links & Controls (Hierarchy: Legal Links -> Controls -> Copyright) */}
           <div className="w-full pt-4">
             {(tosLink || privacyPolicyLink || helpLink || supportEmail) && (
               <div className="mb-4 flex flex-wrap items-center justify-center gap-x-4 gap-y-1.5 text-center text-xs text-slate-400 dark:text-slate-500">
@@ -137,15 +139,16 @@ export function PersistentEduLayout({ branding, children, orgName, appName, lega
               </div>
             )}
 
-            {/* Language Switcher, Theme Switch & Official ZITADEL Watermark */}
-            <div className="flex flex-row items-center justify-between border-t border-slate-100 pt-3 dark:border-slate-800">
-              <div className="flex flex-wrap items-center gap-2 text-[11px] font-semibold text-slate-400 dark:text-slate-500">
+            {/* Structured Footer: Stacked neatly on Mobile, Side-by-Side on Desktop */}
+            <div className="flex flex-col items-center gap-3.5 border-t border-slate-100 pt-4 sm:flex-row sm:justify-between dark:border-slate-800">
+              {/* Copyright and Watermark (Bottom on mobile, Left side on Desktop) */}
+              <div className="order-2 flex flex-col items-center gap-1 text-center text-[11px] font-semibold text-slate-400 sm:order-1 sm:flex-row sm:gap-2 sm:text-left dark:text-slate-500">
                 <span>
                   {displayName} © {new Date().getFullYear()}
                 </span>
                 {!branding?.disableWatermark && (
-                  <>
-                    <span className="text-slate-300 dark:text-slate-600">•</span>
+                  <div className="flex items-center gap-1.5">
+                    <span className="hidden text-slate-300 sm:inline dark:text-slate-600">•</span>
                     <a
                       href="https://zitadel.com"
                       target="_blank"
@@ -153,12 +156,14 @@ export function PersistentEduLayout({ branding, children, orgName, appName, lega
                       className="flex items-center gap-1.5 opacity-85 transition-opacity hover:opacity-100"
                     >
                       <span className="text-[11px] font-normal text-slate-400 dark:text-slate-500">Powered by</span>
-                      <ZitadelLogo height={20} width={75} />
+                      <ZitadelLogo height={18} width={70} />
                     </a>
-                  </>
+                  </div>
                 )}
               </div>
-              <div className="flex items-center gap-3">
+
+              {/* Interactive Controls (Top on mobile, Right side on Desktop) */}
+              <div className="order-1 flex items-center justify-center gap-3 sm:order-2">
                 <LanguageSwitcher languages={activeLangs} />
                 <ThemeSwitch />
               </div>

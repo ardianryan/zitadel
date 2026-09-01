@@ -123,21 +123,21 @@ export default async function Page(props: { searchParams: Promise<Record<string 
             />
 
             {/* Quick helper links resolved dynamically from ZITADEL settings */}
-            <div className="flex items-center justify-center gap-3 py-1 text-xs font-semibold text-slate-500 select-none dark:text-slate-400">
-              {helpLink && (
-                <>
+            {(helpLink || loginSettings?.allowRegister) && (
+              <div className="flex items-center justify-center gap-3 py-1 text-xs font-semibold text-slate-500 select-none dark:text-slate-400">
+                {helpLink && (
                   <a href={helpLink} target="_blank" rel="noreferrer" className="transition-colors hover:text-[#0F91FC]">
                     {tEdu("helpAndVerification")}
                   </a>
-                  <span className="text-slate-300 dark:text-slate-600">•</span>
-                </>
-              )}
-              {loginSettings?.allowRegister && (
-                <Link href="/register" className="transition-colors hover:text-[#0F91FC]">
-                  {tEdu("registerNewAccount")}
-                </Link>
-              )}
-            </div>
+                )}
+                {helpLink && loginSettings?.allowRegister && <span className="text-slate-300 dark:text-slate-600">•</span>}
+                {loginSettings?.allowRegister && (
+                  <Link href="/register" className="transition-colors hover:text-[#0F91FC]">
+                    {tEdu("registerNewAccount")}
+                  </Link>
+                )}
+              </div>
+            )}
           </div>
         )}
 
