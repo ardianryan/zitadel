@@ -30,14 +30,12 @@ export function EduBanner({ orgName, appName: _appName, branding, position = "ri
 
   const displayName = orgName || "ZITADEL";
 
-  const roundedClasses =
-    position === "left"
-      ? "lg:rounded-r-[4rem] shadow-[25px_0_50px_-15px_rgba(0,0,0,0.25)]"
-      : "lg:rounded-l-[4rem] shadow-[-25px_0_50px_-15px_rgba(0,0,0,0.25)]";
+  const shadowClass =
+    position === "left" ? "shadow-[30px_0_60px_-15px_rgba(0,0,0,0.3)]" : "shadow-[-30px_0_60px_-15px_rgba(0,0,0,0.3)]";
 
   return (
     <div
-      className={`relative flex min-h-screen w-full flex-col items-center justify-between overflow-hidden bg-[#0F91FC] p-8 text-center text-white transition-all duration-700 select-none lg:p-12 dark:bg-slate-950 ${roundedClasses} ${className}`}
+      className={`relative flex min-h-screen w-full flex-col items-center justify-between overflow-hidden bg-[#0F91FC] p-8 text-center text-white transition-all duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] select-none lg:rounded-[4rem] lg:p-12 dark:bg-slate-950 ${shadowClass} ${className}`}
       style={{
         background: "linear-gradient(135deg, #0F91FC 0%, #0866C6 100%)",
       }}

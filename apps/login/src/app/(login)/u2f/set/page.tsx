@@ -48,7 +48,7 @@ export default async function Page(props: { searchParams: Promise<Record<string 
   }
 
   return (
-    <DynamicTheme branding={branding}>
+    <DynamicTheme branding={branding} bannerPosition="left">
       <div className="flex flex-col items-center space-y-4">
         <h1>
           <Translated i18nKey="set.title" namespace="u2f" />

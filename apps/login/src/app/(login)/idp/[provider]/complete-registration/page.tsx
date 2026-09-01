@@ -25,7 +25,7 @@ export default async function CompleteRegistrationPage(props: {
   }
 
   return (
-    <DynamicTheme branding={branding}>
+    <DynamicTheme branding={branding} bannerPosition="left">
       <div className="flex flex-col space-y-4">
         <h1>
           <Translated i18nKey="completeRegister.title" namespace="idp" />

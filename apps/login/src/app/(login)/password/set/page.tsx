@@ -9,7 +9,9 @@ import { loadMostRecentSession } from "@/lib/session";
 import {
   getBrandingSettings,
   getDefaultOrg,
+  getLegalAndSupportSettings,
   getLoginSettings,
+  getOrgById,
   getPasswordComplexitySettings,
   getUserByID,
   searchUsers,
@@ -21,9 +23,27 @@ import { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { headers } from "next/headers";
 
-export async function generateMetadata(): Promise<Metadata> {
+export async function generateMetadata(props: {
+  searchParams: Promise<Record<string | number | symbol, string | undefined>>;
+}): Promise<Metadata> {
+  const searchParams = await props.searchParams;
+  const organization = searchParams?.organization;
+  const _headers = await headers();
+  const { serviceConfig } = getServiceConfig(_headers);
+
+  let activeOrg: Organization | null = null;
+  if (organization) {
+    activeOrg = await getOrgById({ serviceConfig, orgId: organization });
+  }
+  if (!activeOrg) {
+    activeOrg = await getDefaultOrg({ serviceConfig });
+  }
+
+  const orgName = activeOrg?.name;
   const t = await getTranslations("password");
-  return { title: t("set.title") };
+  return {
+    title: orgName ? `${orgName} - ${t("set.title")}` : t("set.title"),
+  };
 }
 
 export default async function Page(props: { searchParams: Promise<Record<string | number | symbol, string | undefined>> }) {
@@ -34,13 +54,16 @@ export default async function Page(props: { searchParams: Promise<Record<string 
   const _headers = await headers();
   const { serviceConfig } = getServiceConfig(_headers);
 
-  let defaultOrganization;
-  if (!organization) {
-    const org: Organization | null = await getDefaultOrg({ serviceConfig });
-    if (org) {
-      defaultOrganization = org.id;
-    }
+  let activeOrg: Organization | null = null;
+  if (organization) {
+    activeOrg = await getOrgById({ serviceConfig, orgId: organization });
   }
+  if (!activeOrg) {
+    activeOrg = await getDefaultOrg({ serviceConfig });
+  }
+
+  const defaultOrganization = activeOrg?.id;
+  const orgName = activeOrg?.name || "ZITADEL";
 
   // also allow no session to be found (ignoreUnkownUsername)
   let session: Session | undefined;
@@ -54,21 +77,24 @@ export default async function Page(props: { searchParams: Promise<Record<string 
     });
   }
 
-  const branding = await getBrandingSettings({ serviceConfig, organization: organization ?? defaultOrganization });
+  const effectiveOrgId = organization ?? session?.factors?.user?.organizationId ?? defaultOrganization;
+
+  const branding = await getBrandingSettings({ serviceConfig, organization: effectiveOrgId });
+  const legal = await getLegalAndSupportSettings({ serviceConfig, organization: effectiveOrgId });
 
   const passwordComplexity = await getPasswordComplexitySettings({
     serviceConfig,
-    organization: organization ?? session?.factors?.user?.organizationId ?? defaultOrganization,
+    organization: effectiveOrgId,
   });
 
   const loginSettings = await getLoginSettings({
     serviceConfig,
-    organization: organization ?? session?.factors?.user?.organizationId ?? defaultOrganization,
+    organization: effectiveOrgId,
   });
 
   if (!loginSettings) {
     return (
-      <DynamicTheme branding={branding}>
+      <DynamicTheme branding={branding} orgName={orgName} appName={orgName || "ZITADEL"} legal={legal} bannerPosition="left">
         <div className="mx-auto flex max-w-sm flex-col space-y-4 pt-4">
           <Alert>
             <Translated i18nKey="errors.couldNotGetLoginSettings" namespace="loginname" />
@@ -101,23 +127,14 @@ export default async function Page(props: { searchParams: Promise<Record<string 
   }
 
   return (
-    <DynamicTheme branding={branding}>
+    <DynamicTheme branding={branding} orgName={orgName} appName={orgName || "ZITADEL"} legal={legal} bannerPosition="left">
       <div className="flex flex-col space-y-4">
-        <h1>{session?.factors?.user?.displayName ?? <Translated i18nKey="set.title" namespace="password" />}</h1>
-        <p className="ztdl-p mb-6 block">
+        <h1 className="text-xl font-extrabold tracking-tight text-[#081242] sm:text-2xl dark:text-white">
+          {session?.factors?.user?.displayName ?? <Translated i18nKey="set.title" namespace="password" />}
+        </h1>
+        <p className="text-xs leading-relaxed font-medium text-slate-500 dark:text-slate-400">
           <Translated i18nKey="set.description" namespace="password" />
         </p>
-
-        {/* Only warn when there is neither a loginName nor a userId to continue with.
-            A missing session is expected here: the set/reset flow works via code +
-            userId, and under enumeration protection no session exists by design. */}
-        {!loginName && !userId && (
-          <div className="py-4">
-            <Alert>
-              <Translated i18nKey="unknownContext" namespace="error" />
-            </Alert>
-          </div>
-        )}
 
         {session ? (
           <UserAvatar
@@ -125,9 +142,9 @@ export default async function Page(props: { searchParams: Promise<Record<string 
             displayName={session.factors?.user?.displayName}
             showDropdown
             searchParams={searchParams}
-          ></UserAvatar>
+          />
         ) : loginName ? (
-          <UserAvatar loginName={loginName} displayName={loginName} showDropdown searchParams={searchParams}></UserAvatar>
+          <UserAvatar loginName={loginName} displayName={loginName} showDropdown searchParams={searchParams} />
         ) : null}
       </div>
 

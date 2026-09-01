@@ -5,7 +5,14 @@ import { Translated } from "@/components/translated";
 import { UserAvatar } from "@/components/user-avatar";
 import { getServiceConfig } from "@/lib/service-url";
 import { loadMostRecentSession } from "@/lib/session";
-import { getBrandingSettings, getPasswordComplexitySettings } from "@/lib/zitadel";
+import {
+  getBrandingSettings,
+  getDefaultOrg,
+  getLegalAndSupportSettings,
+  getOrgById,
+  getPasswordComplexitySettings,
+} from "@/lib/zitadel";
+import { Organization } from "@zitadel/proto/zitadel/org/v2/org_pb";
 import { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { headers } from "next/headers";
@@ -23,6 +30,19 @@ export default async function Page(props: { searchParams: Promise<Record<string 
 
   const { loginName, organization, requestId } = searchParams;
 
+  let activeOrg: Organization | null = null;
+  if (organization) {
+    activeOrg = await getOrgById({ serviceConfig, orgId: organization });
+  }
+  if (!activeOrg) {
+    activeOrg = await getDefaultOrg({ serviceConfig });
+  }
+
+  const defaultOrganization = activeOrg?.id;
+  const orgName = activeOrg?.name || "ZITADEL";
+
+  const effectiveOrg = organization ?? defaultOrganization;
+
   // also allow no session to be found (ignoreUnkownUsername)
   const sessionFactors = await loadMostRecentSession({
     serviceConfig,
@@ -32,17 +52,18 @@ export default async function Page(props: { searchParams: Promise<Record<string 
     },
   });
 
-  const branding = await getBrandingSettings({ serviceConfig, organization });
+  const branding = await getBrandingSettings({ serviceConfig, organization: effectiveOrg });
+  const legal = await getLegalAndSupportSettings({ serviceConfig, organization: effectiveOrg });
 
   const passwordComplexity = await getPasswordComplexitySettings({
     serviceConfig,
-    organization: sessionFactors?.factors?.user?.organizationId,
+    organization: sessionFactors?.factors?.user?.organizationId ?? effectiveOrg,
   });
 
   return (
-    <DynamicTheme branding={branding}>
+    <DynamicTheme branding={branding} orgName={orgName} appName={orgName || "ZITADEL"} legal={legal} bannerPosition="left">
       <div className="flex flex-col space-y-4">
-        <h1>
+        <h1 className="text-xl font-extrabold tracking-tight text-[#081242] sm:text-2xl dark:text-white">
           <Translated i18nKey="change.title" namespace="password" />
         </h1>
         <p className="ztdl-p mb-6 block">
@@ -66,17 +87,17 @@ export default async function Page(props: { searchParams: Promise<Record<string 
             displayName={sessionFactors.factors?.user?.displayName}
             showDropdown
             searchParams={searchParams}
-          ></UserAvatar>
+          />
         ) : loginName ? (
-          <UserAvatar loginName={loginName} displayName={loginName} showDropdown searchParams={searchParams}></UserAvatar>
+          <UserAvatar loginName={loginName} displayName={loginName} showDropdown searchParams={searchParams} />
         ) : null}
       </div>
 
       <div className="w-full">
-        {passwordComplexity && loginName && sessionFactors?.factors?.user?.id ? (
+        {passwordComplexity && loginName ? (
           <ChangePasswordForm
-            sessionId={sessionFactors.id}
             loginName={loginName}
+            sessionId={sessionFactors?.id ?? ""}
             requestId={requestId}
             organization={organization}
             passwordComplexitySettings={passwordComplexity}

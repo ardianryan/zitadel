@@ -24,11 +24,11 @@ type Props = {
 };
 
 /**
- * DynamicTheme renders the authentic Kredensia-SSO Edu-Variant layout:
+ * DynamicTheme renders the authentic Kredensia-SSO Edu-Variant layout with smooth sliding transition:
  * - Login Flow (bannerPosition="right"):
- *   - Form on Left (order-1), Kotak Biru on Right (order-2, rounded-left).
+ *   - Form on Left (lg:ml-0 lg:mr-auto), Kotak Biru on Right (lg:left-1/2, shadow-left).
  * - Registration / Forgot Password / Verification (bannerPosition="left"):
- *   - Kotak Biru on Left (order-1, rounded-right), Form on Right (order-2).
+ *   - Kotak Biru on Left (lg:-left-[4rem], shadow-right), Form on Right (lg:ml-auto lg:mr-0).
  * - Mobile (< 1024px): Full-screen responsive layout with EduMobileHeader.
  */
 export function DynamicTheme({
@@ -75,11 +75,11 @@ export function DynamicTheme({
 
   return (
     <ThemeWrapper branding={branding}>
-      <div className="relative flex min-h-screen w-full flex-col overflow-x-hidden bg-white transition-colors lg:flex-row dark:bg-slate-900">
-        {/* Kotak Biru Edu Banner (Desktop Full-Height) */}
+      <div className="relative flex min-h-screen w-full flex-col overflow-hidden bg-white transition-colors dark:bg-slate-900">
+        {/* Kotak Biru Edu Banner (Desktop Full-Height) - Silky smooth CSS sliding transition */}
         <div
-          className={`relative hidden w-full bg-white lg:flex lg:w-1/2 dark:bg-slate-900 ${
-            isBannerRight ? "order-2" : "order-1"
+          className={`absolute top-0 bottom-0 z-20 hidden transition-all duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] lg:flex lg:w-[calc(50%+4rem)] ${
+            isBannerRight ? "left-0 lg:left-1/2" : "left-0 lg:-left-[4rem]"
           }`}
         >
           <EduBanner
@@ -91,10 +91,10 @@ export function DynamicTheme({
           />
         </div>
 
-        {/* Form & Interactive Area */}
+        {/* Form & Interactive Area (sits on Left when banner is Right, sits on Right when banner is Left) */}
         <div
-          className={`relative flex min-h-screen w-full flex-col justify-between bg-white px-6 py-6 sm:px-10 sm:py-8 lg:w-1/2 lg:px-14 lg:py-10 dark:bg-slate-900 ${
-            isBannerRight ? "order-1" : "order-2"
+          className={`relative z-10 flex min-h-screen w-full flex-col justify-between px-6 py-6 transition-all duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] sm:px-10 sm:py-8 lg:w-1/2 lg:px-14 lg:py-10 ${
+            isBannerRight ? "lg:mr-auto lg:ml-0" : "lg:mr-0 lg:ml-auto"
           }`}
         >
           {/* Top: Mobile Header for < 1024px */}

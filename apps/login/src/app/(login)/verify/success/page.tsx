@@ -53,7 +53,7 @@ export default async function Page(props: { searchParams: Promise<any> }) {
   }
 
   return (
-    <DynamicTheme branding={branding}>
+    <DynamicTheme branding={branding} bannerPosition="left">
       <div className="flex flex-col space-y-4">
         <h1>
           <Translated i18nKey="successTitle" namespace="verify" />

@@ -20,7 +20,7 @@ export default async function LinkingFailedPage(props: {
   const branding = await getBrandingSettings({ serviceConfig, organization });
 
   return (
-    <DynamicTheme branding={branding}>
+    <DynamicTheme branding={branding} bannerPosition="left">
       <div className="flex flex-col space-y-4">
         <h1>
           <Translated i18nKey="title" namespace="idp" />

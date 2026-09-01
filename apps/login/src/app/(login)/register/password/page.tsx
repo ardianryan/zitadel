@@ -7,6 +7,7 @@ import {
   getDefaultOrg,
   getLegalAndSupportSettings,
   getLoginSettings,
+  getOrgById,
   getPasswordComplexitySettings,
 } from "@/lib/zitadel";
 import { Organization } from "@zitadel/proto/zitadel/org/v2/org_pb";
@@ -20,24 +21,30 @@ export default async function Page(props: { searchParams: Promise<Record<string 
   const _headers = await headers();
   const { serviceConfig } = getServiceConfig(_headers);
 
-  if (!organization) {
-    const org: Organization | null = await getDefaultOrg({ serviceConfig });
-    if (org) {
-      organization = org.id;
-    }
+  let activeOrg: Organization | null = null;
+  if (organization) {
+    activeOrg = await getOrgById({ serviceConfig, orgId: organization });
+  }
+  if (!activeOrg) {
+    activeOrg = await getDefaultOrg({ serviceConfig });
   }
 
-  const missingData = !firstname || !lastname || !email || !organization;
+  const defaultOrganization = activeOrg?.id;
+  const orgName = activeOrg?.name || "ZITADEL";
 
-  const legal = await getLegalAndSupportSettings({ serviceConfig, organization });
-  const passwordComplexitySettings = await getPasswordComplexitySettings({ serviceConfig, organization });
+  const effectiveOrg = organization ?? defaultOrganization;
 
-  const branding = await getBrandingSettings({ serviceConfig, organization });
+  const missingData = !firstname || !lastname || !email || !effectiveOrg;
 
-  const loginSettings = await getLoginSettings({ serviceConfig, organization });
+  const legal = await getLegalAndSupportSettings({ serviceConfig, organization: effectiveOrg });
+  const passwordComplexitySettings = await getPasswordComplexitySettings({ serviceConfig, organization: effectiveOrg });
+
+  const branding = await getBrandingSettings({ serviceConfig, organization: effectiveOrg });
+
+  const loginSettings = await getLoginSettings({ serviceConfig, organization: effectiveOrg });
 
   return missingData ? (
-    <DynamicTheme branding={branding}>
+    <DynamicTheme branding={branding} orgName={orgName} appName={orgName || "ZITADEL"} legal={legal} bannerPosition="left">
       <div className="flex flex-col items-center space-y-4">
         <h1>
           <Translated i18nKey="missingdata.title" namespace="register" />
@@ -49,12 +56,12 @@ export default async function Page(props: { searchParams: Promise<Record<string 
       <div className="w-full"></div>
     </DynamicTheme>
   ) : loginSettings?.allowRegister && loginSettings.allowLocalAuthentication ? (
-    <DynamicTheme branding={branding}>
+    <DynamicTheme branding={branding} orgName={orgName} appName={orgName || "ZITADEL"} legal={legal} bannerPosition="left">
       <div className="flex flex-col space-y-4">
-        <h1>
+        <h1 className="text-xl font-extrabold tracking-tight text-[#081242] sm:text-2xl dark:text-white">
           <Translated i18nKey="password.title" namespace="register" />
         </h1>
-        <p className="ztdl-p">
+        <p className="text-xs leading-relaxed font-medium text-slate-500 dark:text-slate-400">
           <Translated i18nKey="description" namespace="register" />
         </p>
       </div>
@@ -66,14 +73,14 @@ export default async function Page(props: { searchParams: Promise<Record<string 
             email={email}
             firstname={firstname}
             lastname={lastname}
-            organization={organization as string} // organization is guaranteed to be a string here otherwise we would have returned earlier
+            organization={effectiveOrg as string}
             requestId={requestId}
-          ></SetRegisterPasswordForm>
+          />
         )}
       </div>
     </DynamicTheme>
   ) : (
-    <DynamicTheme branding={branding}>
+    <DynamicTheme branding={branding} orgName={orgName} appName={orgName || "ZITADEL"} legal={legal} bannerPosition="left">
       <div className="flex flex-col space-y-4">
         <h1>
           <Translated i18nKey="disabled.title" namespace="register" />
