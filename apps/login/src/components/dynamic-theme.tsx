@@ -4,6 +4,7 @@ import { EduBanner } from "@/components/edu/edu-banner";
 import { EduMobileHeader } from "@/components/edu/edu-mobile-header";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import ThemeSwitch from "@/components/theme-switch";
+import { ZitadelLogo } from "@/components/zitadel-logo";
 import { Lang, LANGS } from "@/lib/i18n";
 import { resolveLocalizedLegalLink } from "@/lib/legal-links";
 import { BrandingSettings } from "@zitadel/proto/zitadel/settings/v2/branding_settings_pb";
@@ -126,7 +127,7 @@ export function DynamicTheme({ branding, children, orgName, appName, legal, allo
               </div>
             )}
 
-            {/* Language Switcher, Theme Switch & Subtle Watermark */}
+            {/* Language Switcher, Theme Switch & Official ZITADEL Watermark */}
             <div className="flex flex-row items-center justify-between border-t border-slate-100 pt-3 dark:border-slate-800">
               <div className="flex flex-wrap items-center gap-2 text-[11px] font-semibold text-slate-400 dark:text-slate-500">
                 <span>
@@ -139,10 +140,10 @@ export function DynamicTheme({ branding, children, orgName, appName, legal, allo
                       href="https://zitadel.com"
                       target="_blank"
                       rel="noreferrer"
-                      className="flex items-center gap-1 font-medium transition-colors hover:text-slate-700 dark:hover:text-slate-300"
+                      className="flex items-center gap-1.5 opacity-75 transition-opacity hover:opacity-100"
                     >
-                      <span>Powered by</span>
-                      <span className="font-bold text-[#0F91FC]">ZITADEL</span>
+                      <span className="text-[11px] font-normal text-slate-400 dark:text-slate-500">Powered by</span>
+                      <ZitadelLogo height={13} width={48} />
                     </a>
                   </>
                 )}
