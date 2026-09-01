@@ -1,28 +1,10 @@
 "use client";
 
-import { resolveLocalizedLegalLink } from "@/lib/legal-links";
 import { BrandingSettings } from "@zitadel/proto/zitadel/settings/v2/branding_settings_pb";
 import { LegalAndSupportSettings } from "@zitadel/proto/zitadel/settings/v2/legal_settings_pb";
-import { useLocale } from "next-intl";
 import { useEffect, useState } from "react";
+import { EDU_SLIDES } from "./edu-assets";
 import { ParticleCanvas } from "./particle-canvas";
-
-const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "";
-
-const DEFAULT_SLIDES = [
-  {
-    src: `${basePath}/images/edu/login-1.png`,
-    alt: "Layanan Akses Terpadu",
-  },
-  {
-    src: `${basePath}/images/edu/login-2.png`,
-    alt: "Keamanan Identitas Digital",
-  },
-  {
-    src: `${basePath}/images/edu/login-3.png`,
-    alt: "Ekosistem Pendidikan & Organisasi",
-  },
-];
 
 type Props = {
   orgName?: string;
@@ -32,13 +14,12 @@ type Props = {
   className?: string;
 };
 
-export function EduBanner({ orgName, appName, branding, legal, className = "" }: Props) {
-  const locale = useLocale();
+export function EduBanner({ orgName, appName, branding, className = "" }: Props) {
   const [currentSlide, setCurrentSlide] = useState(0);
 
   useEffect(() => {
     const timer = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % DEFAULT_SLIDES.length);
+      setCurrentSlide((prev) => (prev + 1) % EDU_SLIDES.length);
     }, 5000);
 
     return () => clearInterval(timer);
@@ -47,13 +28,9 @@ export function EduBanner({ orgName, appName, branding, legal, className = "" }:
   const displayName = orgName || "ZITADEL";
   const displayApp = appName || "ZITADEL";
 
-  const privacyPolicyLink = resolveLocalizedLegalLink(legal?.privacyPolicyLink, locale);
-  const tosLink = resolveLocalizedLegalLink(legal?.tosLink, locale);
-  const helpLink = resolveLocalizedLegalLink(legal?.helpLink, locale);
-
   return (
     <div
-      className={`relative flex h-full w-full flex-col items-center justify-between overflow-hidden rounded-[3rem] p-6 text-center text-white select-none lg:rounded-[4rem] lg:p-12 ${className}`}
+      className={`relative flex h-full w-full flex-col items-center justify-between overflow-hidden rounded-[3rem] p-6 text-center text-white select-none lg:rounded-[4rem] lg:p-10 ${className}`}
       style={{
         background: "linear-gradient(135deg, #0F91FC 0%, #0866C6 100%)",
       }}
@@ -77,9 +54,9 @@ export function EduBanner({ orgName, appName, branding, legal, className = "" }:
 
       {/* Center Illustration with smooth transition */}
       <div className="relative z-10 my-auto flex h-[38vh] w-full max-w-sm items-center justify-center py-4">
-        {DEFAULT_SLIDES.map((slide, idx) => (
+        {EDU_SLIDES.map((slide, idx) => (
           <div
-            key={slide.src}
+            key={slide.alt}
             className={`absolute inset-0 flex items-center justify-center transition-all duration-700 ease-in-out ${
               currentSlide === idx ? "scale-100 transform opacity-100" : "pointer-events-none scale-95 transform opacity-0"
             }`}
@@ -106,53 +83,9 @@ export function EduBanner({ orgName, appName, branding, legal, className = "" }:
           </p>
         </div>
 
-        {/* Organization Name & Legal Links */}
-        <p className="flex flex-wrap items-center justify-center gap-1.5 text-[10px] font-bold tracking-wider text-white/90 uppercase sm:text-[11px]">
-          <span>{displayName}</span>
-          {tosLink ? (
-            <>
-              <span className="text-white/50">•</span>
-              <a
-                href={tosLink}
-                target="_blank"
-                rel="noreferrer"
-                className="cursor-pointer transition-all hover:text-white hover:underline"
-              >
-                Ketentuan Layanan
-              </a>
-            </>
-          ) : null}
-          {privacyPolicyLink ? (
-            <>
-              <span className="text-white/50">•</span>
-              <a
-                href={privacyPolicyLink}
-                target="_blank"
-                rel="noreferrer"
-                className="cursor-pointer transition-all hover:text-white hover:underline"
-              >
-                Kebijakan Privasi
-              </a>
-            </>
-          ) : null}
-          {helpLink ? (
-            <>
-              <span className="text-white/50">•</span>
-              <a
-                href={helpLink}
-                target="_blank"
-                rel="noreferrer"
-                className="cursor-pointer transition-all hover:text-white hover:underline"
-              >
-                Bantuan
-              </a>
-            </>
-          ) : null}
-        </p>
-
         {/* Slider Indicator Dots */}
         <div className="flex items-center justify-center gap-2 pt-2">
-          {DEFAULT_SLIDES.map((_, idx) => (
+          {EDU_SLIDES.map((_, idx) => (
             <button
               key={idx}
               type="button"
