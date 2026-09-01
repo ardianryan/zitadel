@@ -17,12 +17,16 @@ describe("resolveLocalizedLegalLink", () => {
   });
 
   it("returns the original link when locale is missing", () => {
-    expect(resolveLocalizedLegalLink("https://example.com/{{.Lang}}/terms", undefined)).toBe(
-      "https://example.com/{{.Lang}}/terms",
-    );
+    expect(resolveLocalizedLegalLink("https://example.com/terms", undefined)).toBe("https://example.com/terms");
   });
 
   it("returns undefined when the link is missing", () => {
     expect(resolveLocalizedLegalLink(undefined, "en")).toBeUndefined();
+  });
+
+  it("rejects malicious or unsafe URL schemes (XSS prevention)", () => {
+    expect(resolveLocalizedLegalLink("javascript:alert(document.cookie)", "en")).toBeUndefined();
+    expect(resolveLocalizedLegalLink("data:text/html,<script>alert(1)</script>", "en")).toBeUndefined();
+    expect(resolveLocalizedLegalLink("vbscript:msgbox(1)", "en")).toBeUndefined();
   });
 });

@@ -2,6 +2,9 @@
 
 import { EduBanner } from "@/components/edu/edu-banner";
 import { EduMobileHeader } from "@/components/edu/edu-mobile-header";
+import { LanguageSwitcher } from "@/components/language-switcher";
+import ThemeSwitch from "@/components/theme-switch";
+import { LANGS } from "@/lib/i18n";
 import { resolveLocalizedLegalLink } from "@/lib/legal-links";
 import { BrandingSettings } from "@zitadel/proto/zitadel/settings/v2/branding_settings_pb";
 import { LegalAndSupportSettings } from "@zitadel/proto/zitadel/settings/v2/legal_settings_pb";
@@ -18,9 +21,11 @@ type Props = {
 };
 
 /**
- * DynamicTheme component renders the modern Edu-Variant dual-pane layout:
- * - Desktop (>= 1024px): Left side signature EduBanner with constellation particles and carousel, right side form
- * - Mobile (< 1024px): Clean card layout with EduMobileHeader
+ * DynamicTheme renders the true Kredensia-SSO Edu-Variant layout:
+ * - Desktop (>= 1024px): Fullscreen 50/50 dual pane.
+ *   - Left: Full-height signature Kotak Biru with constellation net, floating carousel & slogan.
+ *   - Right: Full-height clean form container with footer & controls.
+ * - Mobile (< 1024px): Full-screen responsive layout with EduMobileHeader.
  */
 export function DynamicTheme({ branding, children, orgName, appName, legal }: Props) {
   const locale = useLocale();
@@ -47,34 +52,35 @@ export function DynamicTheme({ branding, children, orgName, appName, legal }: Pr
 
   return (
     <ThemeWrapper branding={branding}>
-      <div className="relative mx-auto flex min-h-[calc(100vh-60px)] w-full items-center justify-center p-2 sm:p-6 lg:p-10">
-        <div className="flex min-h-[660px] w-full max-w-[1240px] flex-col overflow-hidden rounded-[2rem] border border-slate-100 bg-white shadow-2xl transition-all duration-500 lg:flex-row lg:rounded-[3.5rem] dark:border-slate-800 dark:bg-slate-900">
-          {/* Left side: Edu Banner with Constellation particles and carousel (desktop) */}
-          <div className="relative hidden w-full p-3 lg:flex lg:w-1/2 lg:p-4">
-            <EduBanner orgName={displayName} appName={displayApp} branding={branding} legal={legal} />
+      <div className="relative flex min-h-screen w-full flex-col overflow-x-hidden bg-white transition-colors lg:flex-row dark:bg-slate-900">
+        {/* Left Pane: Kotak Biru Edu Banner (Desktop Full-Height) */}
+        <div className="relative hidden w-full lg:flex lg:w-1/2">
+          <EduBanner orgName={displayName} appName={displayApp} branding={branding} legal={legal} />
+        </div>
+
+        {/* Right Pane: Form & Interactive Area */}
+        <div className="relative flex min-h-screen w-full flex-col justify-between bg-white px-6 py-6 sm:px-10 sm:py-8 lg:w-1/2 lg:px-14 lg:py-10 dark:bg-slate-900">
+          {/* Top: Mobile Header for < 1024px */}
+          <div>
+            <EduMobileHeader appName={displayApp} branding={branding} />
           </div>
 
-          {/* Right side: Form Container */}
-          <div className="relative flex w-full flex-col justify-between px-6 py-8 sm:px-10 lg:w-1/2 lg:px-14 lg:py-12">
-            <div>
-              {/* Mobile header visible on <1024px */}
-              <EduMobileHeader appName={displayApp} branding={branding} />
+          {/* Center: Main Form Content */}
+          <div className="mx-auto my-auto w-full max-w-md space-y-6 py-6">
+            {hasLeftRightStructure ? (
+              <>
+                <div className="space-y-2">{leftContent}</div>
+                <div>{rightContent}</div>
+              </>
+            ) : (
+              <div>{actualChildren}</div>
+            )}
+          </div>
 
-              <div className="mx-auto w-full max-w-md space-y-6 pt-2">
-                {hasLeftRightStructure ? (
-                  <>
-                    <div className="space-y-2">{leftContent}</div>
-                    <div>{rightContent}</div>
-                  </>
-                ) : (
-                  <div>{actualChildren}</div>
-                )}
-              </div>
-            </div>
-
-            {/* Bottom Footer with External / Legal Links from Organization Settings */}
+          {/* Bottom: Organization External Links & Controls (Language & Theme) */}
+          <div className="w-full pt-4">
             {(tosLink || privacyPolicyLink || helpLink || supportEmail) && (
-              <div className="mt-8 flex flex-wrap items-center justify-center gap-x-4 gap-y-1.5 pt-4 text-center text-xs text-slate-400 dark:text-slate-500">
+              <div className="mb-4 flex flex-wrap items-center justify-center gap-x-4 gap-y-1.5 text-center text-xs text-slate-400 dark:text-slate-500">
                 {tosLink && (
                   <a
                     href={tosLink}
@@ -110,6 +116,17 @@ export function DynamicTheme({ branding, children, orgName, appName, legal }: Pr
                 )}
               </div>
             )}
+
+            {/* Language Switcher & Dark/Light Mode Switch */}
+            <div className="flex flex-row items-center justify-between border-t border-slate-100 pt-3 dark:border-slate-800">
+              <span className="text-[11px] font-semibold text-slate-400 dark:text-slate-500">
+                {displayName} © {new Date().getFullYear()}
+              </span>
+              <div className="flex items-center gap-3">
+                <LanguageSwitcher languages={LANGS} />
+                <ThemeSwitch />
+              </div>
+            </div>
           </div>
         </div>
       </div>

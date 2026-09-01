@@ -9,13 +9,23 @@ type Props = {
 
 export function EduMobileHeader({ appName, branding }: Props) {
   const displayApp = appName || "ZITADEL";
-  const logoUrl = branding?.lightTheme?.logoUrl;
+  const lightLogo = branding?.lightTheme?.logoUrl;
+  const darkLogo = branding?.darkTheme?.logoUrl || lightLogo;
 
   return (
     <div className="mb-6 flex w-full flex-col items-center text-center select-none lg:hidden">
       <div className="mb-2.5 flex items-center gap-3">
-        {logoUrl ? (
-          <img src={logoUrl} alt={displayApp} className="h-11 w-11 rounded-xl object-contain shadow-sm" />
+        {lightLogo ? (
+          <>
+            <img src={lightLogo} alt={displayApp} className="h-11 w-11 rounded-xl object-contain shadow-sm dark:hidden" />
+            {darkLogo && (
+              <img
+                src={darkLogo}
+                alt={displayApp}
+                className="hidden h-11 w-11 rounded-xl object-contain shadow-sm dark:block"
+              />
+            )}
+          </>
         ) : (
           <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#0F91FC] text-lg font-black text-white shadow-sm">
             Z

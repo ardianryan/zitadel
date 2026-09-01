@@ -30,7 +30,7 @@ export function EduBanner({ orgName, appName, branding, className = "" }: Props)
 
   return (
     <div
-      className={`relative flex h-full w-full flex-col items-center justify-between overflow-hidden rounded-[3rem] p-6 text-center text-white select-none lg:rounded-[4rem] lg:p-10 ${className}`}
+      className={`relative flex min-h-screen w-full flex-col items-center justify-between overflow-hidden bg-[#0F91FC] p-8 text-center text-white shadow-[25px_0_50px_-15px_rgba(0,0,0,0.25)] select-none lg:rounded-r-[4rem] lg:p-12 dark:bg-slate-950 ${className}`}
       style={{
         background: "linear-gradient(135deg, #0F91FC 0%, #0866C6 100%)",
       }}
@@ -53,7 +53,7 @@ export function EduBanner({ orgName, appName, branding, className = "" }: Props)
       </div>
 
       {/* Center Illustration with smooth transition */}
-      <div className="relative z-10 my-auto flex h-[38vh] w-full max-w-sm items-center justify-center py-4">
+      <div className="relative z-10 my-auto flex h-[42vh] w-full max-w-sm items-center justify-center py-4">
         {EDU_SLIDES.map((slide, idx) => (
           <div
             key={slide.alt}
@@ -61,13 +61,13 @@ export function EduBanner({ orgName, appName, branding, className = "" }: Props)
               currentSlide === idx ? "scale-100 transform opacity-100" : "pointer-events-none scale-95 transform opacity-0"
             }`}
           >
-            <img src={slide.src} alt={slide.alt} className="max-h-[36vh] w-auto object-contain drop-shadow-2xl" />
+            <img src={slide.src} alt={slide.alt} className="max-h-[38vh] w-auto object-contain drop-shadow-2xl" />
           </div>
         ))}
       </div>
 
       {/* Bottom Content Area */}
-      <div className="relative z-10 flex w-full max-w-md flex-col items-center space-y-3 pb-2 text-center">
+      <div className="relative z-10 flex w-full max-w-md flex-col items-center space-y-3 pb-4 text-center">
         <h2 className="text-2xl font-black tracking-tight text-white lg:text-3xl">Selamat Datang di {displayApp}</h2>
 
         {/* 2-line Slogan */}

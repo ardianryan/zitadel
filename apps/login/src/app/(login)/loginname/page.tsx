@@ -1,7 +1,7 @@
 import { DynamicTheme } from "@/components/dynamic-theme";
 import { SignInWithIdp } from "@/components/sign-in-with-idp";
-import { Translated } from "@/components/translated";
 import { UsernameForm } from "@/components/username-form";
+import { resolveLocalizedLegalLink } from "@/lib/legal-links";
 import { getServiceConfig } from "@/lib/service-url";
 import {
   getActiveIdentityProviders,
@@ -13,8 +13,9 @@ import {
 } from "@/lib/zitadel";
 import { Organization } from "@zitadel/proto/zitadel/org/v2/org_pb";
 import { Metadata } from "next";
-import { getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 import { headers } from "next/headers";
+import Link from "next/link";
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("loginname");
@@ -32,6 +33,7 @@ export default async function Page(props: { searchParams: Promise<Record<string 
 
   const _headers = await headers();
   const { serviceConfig } = getServiceConfig(_headers);
+  const locale = await getLocale();
 
   let activeOrg: Organization | null = null;
   if (organization) {
@@ -56,19 +58,65 @@ export default async function Page(props: { searchParams: Promise<Record<string 
   const branding = await getBrandingSettings({ serviceConfig, organization: organization ?? defaultOrganization });
   const legal = await getLegalAndSupportSettings({ serviceConfig, organization: organization ?? defaultOrganization });
 
+  const helpLink = resolveLocalizedLegalLink(legal?.helpLink, locale);
+
+  const hasIdp = loginSettings?.allowExternalIdp && !!identityProviders?.length;
+  const hasLocal = loginSettings?.allowLocalAuthentication;
+
   return (
     <DynamicTheme branding={branding} orgName={orgName} appName={orgName || "ZITADEL"} legal={legal}>
-      <div className="flex flex-col space-y-2">
-        <h1 className="text-xl font-extrabold tracking-tight text-[#081242] sm:text-2xl dark:text-white">
-          <Translated i18nKey="title" namespace="loginname" />
+      <div className="flex flex-col space-y-1.5 text-left">
+        <h1 className="text-xl font-black tracking-tight text-[#081242] sm:text-2xl dark:text-white">
+          Single Account, Single Sign On login
         </h1>
-        <p className="text-xs leading-relaxed font-medium text-slate-500 dark:text-slate-400">
-          <Translated i18nKey="description" namespace="loginname" />
+        <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
+          Masuk untuk mengakses seluruh ekosistem layanan pembelajaran terpadu.
         </p>
       </div>
 
-      <div className="w-full space-y-4">
-        {loginSettings?.allowLocalAuthentication && (
+      <div className="w-full space-y-5 text-left">
+        {/* Dynamic IDP Login (Google, Azure AD, SAML, etc. from ZITADEL) */}
+        {hasIdp && (
+          <div className="w-full space-y-3">
+            <SignInWithIdp
+              identityProviders={identityProviders}
+              requestId={requestId}
+              organization={organization}
+              postErrorRedirectUrl="/loginname"
+              showLabel={false}
+            />
+
+            {/* Quick helper links resolved dynamically from ZITADEL settings */}
+            <div className="flex items-center justify-center gap-3 py-1 text-xs font-semibold text-slate-500 select-none dark:text-slate-400">
+              {helpLink && (
+                <>
+                  <a href={helpLink} target="_blank" rel="noreferrer" className="transition-colors hover:text-[#0F91FC]">
+                    Bantuan / Verifikasi Akun
+                  </a>
+                  <span className="text-slate-300 dark:text-slate-600">•</span>
+                </>
+              )}
+              {loginSettings?.allowRegister && (
+                <Link href="/register" className="transition-colors hover:text-[#0F91FC]">
+                  Daftar Akun Baru
+                </Link>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Divider if both IDP and Local Auth exist */}
+        {hasIdp && hasLocal && (
+          <div className="relative flex items-center justify-center py-2 select-none">
+            <div className="w-full border-t border-slate-200 dark:border-slate-700"></div>
+            <span className="absolute bg-white px-3 text-[11px] font-semibold text-slate-400 dark:bg-slate-900 dark:text-slate-500">
+              Atau masuk dengan surel / nama akun
+            </span>
+          </div>
+        )}
+
+        {/* Local Username Form */}
+        {hasLocal && (
           <UsernameForm
             loginName={loginName}
             requestId={requestId}
@@ -79,19 +127,7 @@ export default async function Page(props: { searchParams: Promise<Record<string 
             hideSuffix={branding?.hideLoginNameSuffix}
             submit={submit}
             allowRegister={!!loginSettings?.allowRegister}
-          ></UsernameForm>
-        )}
-
-        {loginSettings?.allowExternalIdp && !!identityProviders?.length && (
-          <div className="w-full pt-2">
-            <SignInWithIdp
-              identityProviders={identityProviders}
-              requestId={requestId}
-              organization={organization}
-              postErrorRedirectUrl="/loginname"
-              showLabel={loginSettings?.allowLocalAuthentication}
-            ></SignInWithIdp>
-          </div>
+          />
         )}
       </div>
     </DynamicTheme>
