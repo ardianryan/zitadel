@@ -42,7 +42,7 @@ export default async function Page(props: { searchParams: Promise<Record<string 
   const supportEmail = legal?.supportEmail;
 
   return (
-    <DynamicTheme branding={branding} orgName={orgName} appName={orgName || "ZITADEL"} legal={legal}>
+    <DynamicTheme branding={branding} orgName={orgName} appName={orgName || "ZITADEL"} legal={legal} bannerPosition="left">
       <div className="flex flex-col space-y-6 text-center sm:text-left">
         <div className="space-y-2 text-center">
           <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-50 text-amber-600 dark:bg-amber-950/50 dark:text-amber-400">
