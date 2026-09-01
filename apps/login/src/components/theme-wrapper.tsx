@@ -74,14 +74,14 @@ export const ThemeWrapper = ({ children, branding }: Props) => {
     }
   }, [branding?.fontUrl]);
 
+  // Only force theme if admin strictly enforces DARK or LIGHT in branding policy.
+  // If AUTO or UNSPECIFIED, let the user's manual selection in next-themes persist.
   useEffect(() => {
     if (!branding) {
       return;
     }
 
-    if (branding.themeMode === ThemeMode.AUTO) {
-      setNextTheme("system");
-    } else if (branding.themeMode === ThemeMode.DARK) {
+    if (branding.themeMode === ThemeMode.DARK) {
       setNextTheme("dark");
     } else if (branding.themeMode === ThemeMode.LIGHT) {
       setNextTheme("light");

@@ -64,7 +64,7 @@ export function DynamicTheme({ branding, children, orgName, appName, legal, allo
     <ThemeWrapper branding={branding}>
       <div className="relative flex min-h-screen w-full flex-col overflow-x-hidden bg-white transition-colors lg:flex-row dark:bg-slate-900">
         {/* Left Pane: Kotak Biru Edu Banner (Desktop Full-Height) */}
-        <div className="relative hidden w-full lg:flex lg:w-1/2">
+        <div className="relative hidden w-full bg-white lg:flex lg:w-1/2 dark:bg-slate-900">
           <EduBanner orgName={displayName} appName={displayApp} branding={branding} legal={legal} />
         </div>
 
@@ -140,10 +140,10 @@ export function DynamicTheme({ branding, children, orgName, appName, legal, allo
                       href="https://zitadel.com"
                       target="_blank"
                       rel="noreferrer"
-                      className="flex items-center gap-1.5 opacity-75 transition-opacity hover:opacity-100"
+                      className="flex items-center gap-1.5 opacity-85 transition-opacity hover:opacity-100"
                     >
                       <span className="text-[11px] font-normal text-slate-400 dark:text-slate-500">Powered by</span>
-                      <ZitadelLogo height={13} width={48} />
+                      <ZitadelLogo height={18} width={68} />
                     </a>
                   </>
                 )}
