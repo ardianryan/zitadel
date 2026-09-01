@@ -37,9 +37,9 @@ export const DEFAULT_COMPONENT_ROUNDNESS: ComponentRoundnessConfig = {
 
 // Default theme configuration
 export const DEFAULT_THEME: ThemeConfig = {
-  roundness: "mid",
+  roundness: "full",
   componentRoundness: DEFAULT_COMPONENT_ROUNDNESS,
-  layout: "top-to-bottom",
+  layout: "side-by-side",
   appearance: "flat",
   spacing: "regular",
 };

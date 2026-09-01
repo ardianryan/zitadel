@@ -8,17 +8,19 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { ParticleCanvas } from "./particle-canvas";
 
+const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "";
+
 const DEFAULT_SLIDES = [
   {
-    src: "/images/edu/login-1.png",
+    src: `${basePath}/images/edu/login-1.png`,
     alt: "Layanan Akses Terpadu",
   },
   {
-    src: "/images/edu/login-2.png",
+    src: `${basePath}/images/edu/login-2.png`,
     alt: "Keamanan Identitas Digital",
   },
   {
-    src: "/images/edu/login-3.png",
+    src: `${basePath}/images/edu/login-3.png`,
     alt: "Ekosistem Pendidikan & Organisasi",
   },
 ];
