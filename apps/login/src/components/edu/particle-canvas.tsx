@@ -11,25 +11,16 @@ export function ParticleCanvas() {
 
   useEffect(() => {
     const canvas = canvasRef.current;
-    if (!canvas || !canvas.parentElement) return;
+    if (!canvas) return;
 
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
     let animationFrameId: number;
 
-    let width = (canvas.width = canvas.parentElement.offsetWidth);
-    let height = (canvas.height = canvas.parentElement.offsetHeight);
+    let width = (canvas.width = canvas.parentElement?.offsetWidth || window.innerWidth / 2 || 600);
+    let height = (canvas.height = canvas.parentElement?.offsetHeight || window.innerHeight || 800);
 
-    const handleResize = () => {
-      if (!canvas || !canvas.parentElement) return;
-      width = canvas.width = canvas.parentElement.offsetWidth;
-      height = canvas.height = canvas.parentElement.offsetHeight;
-    };
-
-    window.addEventListener("resize", handleResize);
-
-    const particleCount = Math.min(Math.floor((width * height) / 8000), 65);
     const particles: Particle[] = [];
 
     class Particle {
@@ -45,12 +36,12 @@ export function ParticleCanvas() {
       constructor() {
         this.x = Math.random() * width;
         this.y = Math.random() * height;
-        this.size = Math.random() * 2.2 + 1.2;
+        this.size = Math.random() * 2.5 + 1.2;
         this.speedX = (Math.random() - 0.5) * 0.6;
         this.speedY = -Math.random() * 0.5 - 0.2;
-        this.alpha = Math.random() * 0.5 + 0.25;
+        this.alpha = Math.random() * 0.55 + 0.3;
         this.targetAlpha = this.alpha;
-        this.alphaSpeed = Math.random() * 0.01 + 0.005;
+        this.alphaSpeed = Math.random() * 0.012 + 0.006;
       }
 
       update() {
@@ -67,7 +58,7 @@ export function ParticleCanvas() {
 
         // Subtle twinkling animation
         if (Math.abs(this.alpha - this.targetAlpha) < 0.01) {
-          this.targetAlpha = Math.random() * 0.6 + 0.2;
+          this.targetAlpha = Math.random() * 0.65 + 0.25;
         }
         if (this.alpha < this.targetAlpha) {
           this.alpha += this.alphaSpeed;
@@ -81,20 +72,49 @@ export function ParticleCanvas() {
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
         ctx.fillStyle = `rgba(255, 255, 255, ${this.alpha})`;
-        ctx.shadowBlur = 6;
-        ctx.shadowColor = "rgba(255, 255, 255, 0.8)";
+        ctx.shadowBlur = 8;
+        ctx.shadowColor = "rgba(255, 255, 255, 0.9)";
         ctx.fill();
         ctx.shadowBlur = 0;
       }
     }
 
-    for (let i = 0; i < particleCount; i++) {
-      particles.push(new Particle());
+    const initParticles = () => {
+      particles.length = 0;
+      const count = Math.min(Math.max(Math.floor((width * height) / 7000), 45), 85);
+      for (let i = 0; i < count; i++) {
+        particles.push(new Particle());
+      }
+    };
+
+    const handleResize = () => {
+      if (!canvas) return;
+      const newWidth = canvas.parentElement?.offsetWidth || window.innerWidth / 2 || 600;
+      const newHeight = canvas.parentElement?.offsetHeight || window.innerHeight || 800;
+      if (newWidth > 0 && newHeight > 0 && (newWidth !== width || newHeight !== height)) {
+        width = canvas.width = newWidth;
+        height = canvas.height = newHeight;
+        initParticles();
+      }
+    };
+
+    // Initial particle creation
+    initParticles();
+
+    // Use ResizeObserver for instant responsive resize detection
+    let resizeObserver: ResizeObserver | null = null;
+    if (typeof ResizeObserver !== "undefined" && canvas.parentElement) {
+      resizeObserver = new ResizeObserver(() => {
+        handleResize();
+      });
+      resizeObserver.observe(canvas.parentElement);
+    } else {
+      window.addEventListener("resize", handleResize);
     }
 
     const connectLines = () => {
       if (!ctx) return;
-      const maxDistance = 110;
+      const maxDistance = 120;
       for (let a = 0; a < particles.length; a++) {
         for (let b = a + 1; b < particles.length; b++) {
           const dx = particles[a].x - particles[b].x;
@@ -102,9 +122,9 @@ export function ParticleCanvas() {
           const distance = Math.sqrt(dx * dx + dy * dy);
 
           if (distance < maxDistance) {
-            const opacity = (1 - distance / maxDistance) * 0.22;
+            const opacity = (1 - distance / maxDistance) * 0.28;
             ctx.strokeStyle = `rgba(255, 255, 255, ${opacity})`;
-            ctx.lineWidth = 0.75;
+            ctx.lineWidth = 0.8;
             ctx.beginPath();
             ctx.moveTo(particles[a].x, particles[a].y);
             ctx.lineTo(particles[b].x, particles[b].y);
@@ -131,7 +151,11 @@ export function ParticleCanvas() {
     animate();
 
     return () => {
-      window.removeEventListener("resize", handleResize);
+      if (resizeObserver) {
+        resizeObserver.disconnect();
+      } else {
+        window.removeEventListener("resize", handleResize);
+      }
       cancelAnimationFrame(animationFrameId);
     };
   }, []);
@@ -139,7 +163,8 @@ export function ParticleCanvas() {
   return (
     <canvas
       ref={canvasRef}
-      className="pointer-events-none absolute inset-0 z-0 h-full w-full rounded-[3rem] lg:rounded-[4rem]"
+      className="pointer-events-none absolute inset-0 z-0 h-full w-full"
+      style={{ display: "block" }}
     />
   );
 }

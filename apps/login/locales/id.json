@@ -124,6 +124,36 @@
       "info": {
         "passwordChanged": "Kata sandi berhasil diperbarui"
       }
+    },
+    "complexity": {
+      "length": "Minimal harus {minLength} karakter.",
+      "hasSymbol": "Harus mengandung simbol.",
+      "hasNumber": "Harus mengandung angka.",
+      "hasUppercase": "Harus mengandung huruf besar.",
+      "hasLowercase": "Harus mengandung huruf kecil.",
+      "equals": "Konfirmasi kata sandi cocok.",
+      "matches": "Cocok",
+      "doesNotMatch": "Tidak cocok"
+    },
+    "errors": {
+      "noHostFound": "Host tidak ditemukan",
+      "couldNotSendResetLink": "Gagal mengirim tautan reset kata sandi",
+      "couldNotCreateSessionForUser": "Gagal membuat sesi atau pengguna tidak ditemukan",
+      "couldNotVerifyPassword": "Kata sandi salah atau tidak dapat diverifikasi",
+      "failedToAuthenticate": "Gagal mengotentikasi. Percobaan tersisa: {failedAttempts} dari {maxPasswordAttempts}.{lockoutMessage}",
+      "failedToAuthenticateNoLimit": "Gagal mengotentikasi.",
+      "accountLockedContactAdmin": " Akun Anda terkunci. Hubungi administrator sekolah.",
+      "userNotFound": "Pengguna tidak ditemukan dalam sistem",
+      "initialUserNotSupported": "Pengguna awal tidak didukung",
+      "userInitialStateNotSupported": "Status awal pengguna tidak didukung",
+      "codeOrVerificationRequired": "Kode atau verifikasi pengguna diperlukan",
+      "verificationRequired": "Verifikasi pengguna harus dilakukan terlebih dahulu",
+      "couldNotLoadSession": "Gagal memuat sesi",
+      "couldNotLoadAuthMethods": "Gagal memuat metode otentikasi",
+      "failedPrecondition": "Prasyarat tidak terpenuhi",
+      "sessionNotValid": "Sesi tidak valid",
+      "passwordVerificationMissing": "Verifikasi kata sandi tidak ditemukan.",
+      "passwordVerificationTooOld": "Verifikasi kata sandi sudah kadaluarsa. Silakan verifikasi ulang."
     }
   },
   "idp": {
