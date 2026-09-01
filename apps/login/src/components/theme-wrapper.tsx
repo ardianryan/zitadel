@@ -18,11 +18,27 @@ export const ThemeWrapper = ({ children, branding }: Props) => {
     setTheme(document, branding);
   }, [branding]);
 
+  // Dynamically update favicon from ZITADEL branding settings
+  useEffect(() => {
+    const iconUrl = branding?.lightTheme?.iconUrl || branding?.darkTheme?.iconUrl || branding?.lightTheme?.logoUrl;
+    if (iconUrl) {
+      const existingIcons = document.querySelectorAll(
+        "link[rel*='icon'], link[rel='apple-touch-icon'], link[rel='shortcut icon']",
+      );
+      if (existingIcons.length > 0) {
+        existingIcons.forEach((el) => {
+          (el as HTMLLinkElement).href = iconUrl;
+        });
+      } else {
+        const link = document.createElement("link");
+        link.rel = "icon";
+        link.href = iconUrl;
+        document.head.appendChild(link);
+      }
+    }
+  }, [branding]);
+
   // Apply custom font from branding settings before paint to avoid FOUC.
-  // When a custom font is uploaded via the label/branding policy, fontUrl
-  // contains a fully-resolved URL to the font file served by the assets API.
-  // We inject a @font-face rule and set a CSS custom property so the entire
-  // login UI picks up the custom font with the existing font as fallback.
   useLayoutEffect(() => {
     const STYLE_ID = "zitadel-custom-font";
 
@@ -41,8 +57,6 @@ export const ThemeWrapper = ({ children, branding }: Props) => {
         styleEl.id = STYLE_ID;
         document.head.appendChild(styleEl);
       }
-      // Capture the current font-family (Lato from next/font) before overriding,
-      // so it serves as fallback if the custom font fails to load.
       const existingFont = getComputedStyle(document.documentElement).fontFamily || "sans-serif";
       const fontStack = `'ZitadelCustomFont', ${existingFont}`;
 
@@ -56,66 +70,27 @@ export const ThemeWrapper = ({ children, branding }: Props) => {
       `;
 
       document.documentElement.style.setProperty("--zitadel-font-family", fontStack);
-      // Inline style overrides the class-based Lato from next/font
       document.documentElement.style.setProperty("font-family", fontStack);
-    } else {
-      // No custom font — remove injected style and let Lato class take over
-      const existing = document.getElementById(STYLE_ID);
-      if (existing) {
-        existing.remove();
-      }
-      document.documentElement.style.removeProperty("--zitadel-font-family");
-      document.documentElement.style.removeProperty("font-family");
     }
-
-    return () => {
-      const existing = document.getElementById(STYLE_ID);
-      if (existing) {
-        existing.remove();
-      }
-      document.documentElement.style.removeProperty("--zitadel-font-family");
-      document.documentElement.style.removeProperty("font-family");
-    };
   }, [branding?.fontUrl]);
 
-  // Publish themeMode to the module-level store so ThemeSwitch can read it
   useEffect(() => {
-    setThemeMode(branding?.themeMode ?? ThemeMode.UNSPECIFIED);
-  }, [branding?.themeMode]);
-
-  // Handle branding themeMode to force specific theme.
-  // Uses useLayoutEffect to apply before paint and writes the forced value
-  // to localStorage so next-themes doesn't fall back to system default.
-  useLayoutEffect(() => {
-    if (branding?.themeMode !== undefined) {
-      switch (branding.themeMode) {
-        case ThemeMode.LIGHT:
-          document.documentElement.classList.remove("dark");
-          try {
-            localStorage.setItem("cp-theme", "light");
-          } catch {
-            /* localStorage unavailable (e.g. private mode) */
-          }
-          setNextTheme("light");
-          break;
-        case ThemeMode.DARK:
-          document.documentElement.classList.add("dark");
-          try {
-            localStorage.setItem("cp-theme", "dark");
-          } catch {
-            /* localStorage unavailable (e.g. private mode) */
-          }
-          setNextTheme("dark");
-          break;
-        case ThemeMode.AUTO:
-        case ThemeMode.UNSPECIFIED:
-        default:
-          setNextTheme("system");
-          break;
-      }
+    if (!branding) {
+      return;
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
+    if (branding.themeMode === ThemeMode.AUTO) {
+      setNextTheme("system");
+    } else if (branding.themeMode === ThemeMode.DARK) {
+      setNextTheme("dark");
+    } else if (branding.themeMode === ThemeMode.LIGHT) {
+      setNextTheme("light");
+    }
+  }, [branding, setNextTheme]);
+
+  useEffect(() => {
+    setThemeMode(branding?.themeMode);
   }, [branding?.themeMode]);
 
-  return <div>{children}</div>;
+  return <>{children}</>;
 };

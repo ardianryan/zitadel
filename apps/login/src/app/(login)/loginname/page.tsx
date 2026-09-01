@@ -1,10 +1,12 @@
 import { DynamicTheme } from "@/components/dynamic-theme";
 import { SignInWithIdp } from "@/components/sign-in-with-idp";
 import { UsernameForm } from "@/components/username-form";
+import { getLanguage, Lang, LANGS } from "@/lib/i18n";
 import { resolveLocalizedLegalLink } from "@/lib/legal-links";
 import { getServiceConfig } from "@/lib/service-url";
 import {
   getActiveIdentityProviders,
+  getAllowedLanguages,
   getBrandingSettings,
   getDefaultOrg,
   getLegalAndSupportSettings,
@@ -58,13 +60,29 @@ export default async function Page(props: { searchParams: Promise<Record<string 
   const branding = await getBrandingSettings({ serviceConfig, organization: organization ?? defaultOrganization });
   const legal = await getLegalAndSupportSettings({ serviceConfig, organization: organization ?? defaultOrganization });
 
+  let allowedLanguages: Lang[] = LANGS.filter((l) => l.code === "id" || l.code === "en");
+  try {
+    const langSettings = await getAllowedLanguages({ serviceConfig });
+    if (langSettings.allowedLanguages?.length) {
+      allowedLanguages = langSettings.allowedLanguages.map((code) => getLanguage(code)).filter((l): l is Lang => Boolean(l));
+    }
+  } catch (e) {
+    console.warn("Failed to load allowed languages", e);
+  }
+
   const helpLink = resolveLocalizedLegalLink(legal?.helpLink, locale);
 
   const hasIdp = loginSettings?.allowExternalIdp && !!identityProviders?.length;
   const hasLocal = loginSettings?.allowLocalAuthentication;
 
   return (
-    <DynamicTheme branding={branding} orgName={orgName} appName={orgName || "ZITADEL"} legal={legal}>
+    <DynamicTheme
+      branding={branding}
+      orgName={orgName}
+      appName={orgName || "ZITADEL"}
+      legal={legal}
+      allowedLanguages={allowedLanguages}
+    >
       <div className="flex flex-col space-y-1.5 text-left">
         <h1 className="text-xl font-black tracking-tight text-[#081242] sm:text-2xl dark:text-white">
           Single Account, Single Sign On login

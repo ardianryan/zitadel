@@ -4,7 +4,7 @@ import { EduBanner } from "@/components/edu/edu-banner";
 import { EduMobileHeader } from "@/components/edu/edu-mobile-header";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import ThemeSwitch from "@/components/theme-switch";
-import { LANGS } from "@/lib/i18n";
+import { Lang, LANGS } from "@/lib/i18n";
 import { resolveLocalizedLegalLink } from "@/lib/legal-links";
 import { BrandingSettings } from "@zitadel/proto/zitadel/settings/v2/branding_settings_pb";
 import { LegalAndSupportSettings } from "@zitadel/proto/zitadel/settings/v2/legal_settings_pb";
@@ -18,6 +18,7 @@ type Props = {
   orgName?: string;
   appName?: string;
   legal?: LegalAndSupportSettings;
+  allowedLanguages?: Lang[];
 };
 
 /**
@@ -27,7 +28,7 @@ type Props = {
  *   - Right: Full-height clean form container with footer & controls.
  * - Mobile (< 1024px): Full-screen responsive layout with EduMobileHeader.
  */
-export function DynamicTheme({ branding, children, orgName, appName, legal }: Props) {
+export function DynamicTheme({ branding, children, orgName, appName, legal, allowedLanguages }: Props) {
   const locale = useLocale();
 
   const actualChildren: ReactNode = React.useMemo(() => {
@@ -44,6 +45,14 @@ export function DynamicTheme({ branding, children, orgName, appName, legal }: Pr
   const tosLink = resolveLocalizedLegalLink(legal?.tosLink, locale);
   const helpLink = resolveLocalizedLegalLink(legal?.helpLink, locale);
   const supportEmail = legal?.supportEmail;
+
+  // Active languages: strictly respect admin allowed languages, falling back to ID & EN
+  const activeLangs = React.useMemo(() => {
+    if (allowedLanguages && allowedLanguages.length > 0) {
+      return allowedLanguages;
+    }
+    return LANGS.filter((l) => l.code === "id" || l.code === "en");
+  }, [allowedLanguages]);
 
   const childArray = Children.toArray(actualChildren);
   const leftContent = childArray[0] || null;
@@ -123,7 +132,7 @@ export function DynamicTheme({ branding, children, orgName, appName, legal }: Pr
                 {displayName} © {new Date().getFullYear()}
               </span>
               <div className="flex items-center gap-3">
-                <LanguageSwitcher languages={LANGS} />
+                <LanguageSwitcher languages={activeLangs} />
                 <ThemeSwitch />
               </div>
             </div>

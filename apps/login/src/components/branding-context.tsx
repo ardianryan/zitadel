@@ -14,9 +14,10 @@ function notifyListeners() {
   listeners.forEach((listener) => listener());
 }
 
-export function setThemeMode(mode: number) {
-  if (currentThemeMode !== mode) {
-    currentThemeMode = mode;
+export function setThemeMode(mode: number | undefined) {
+  const normalized = mode ?? 0;
+  if (currentThemeMode !== normalized) {
+    currentThemeMode = normalized;
     notifyListeners();
   }
 }

@@ -7,7 +7,7 @@ import { getRequestConfig } from "next-intl/server";
 import { cookies, headers } from "next/headers";
 
 export default getRequestConfig(async () => {
-  const fallback = "en";
+  const fallback = "id";
   const cookiesList = await cookies();
 
   const _headers = await headers();
@@ -29,28 +29,28 @@ export default getRequestConfig(async () => {
     console.warn("Failed to load global settings", e);
   }
 
+  // Priority 1: User's explicit cookie selection (if within allowed languages)
+  // Priority 2: Admin-configured default language from ZITADEL settings
+  // Priority 3: Accept-Language header (only if matches allowed languages)
+  // Priority 4: Fallback ("id")
   let locale: string = defaultLanguage;
 
-  const languageHeader = await (await headers()).get(LANGUAGE_HEADER_NAME);
-  if (languageHeader) {
-    // splits "en-US,en;q=0.9" to ["en", "US"] or ["en"]
-    const headerLocale = languageHeader.split(",")[0].split("-")[0];
-    if (allowedLanguages.includes(headerLocale)) {
-      locale = headerLocale;
-    }
-  }
-
   const languageCookie = cookiesList?.get(LANGUAGE_COOKIE_NAME);
-  if (languageCookie && languageCookie.value) {
-    if (allowedLanguages.includes(languageCookie.value)) {
-      locale = languageCookie.value;
-    } else {
-      // If the cookie tells a language that is other than the supported ones, fall back to the default.
-      locale = defaultLanguage;
+  if (languageCookie && languageCookie.value && allowedLanguages.includes(languageCookie.value)) {
+    locale = languageCookie.value;
+  } else if (defaultLanguage && allowedLanguages.includes(defaultLanguage)) {
+    locale = defaultLanguage;
+  } else {
+    const languageHeader = await (await headers()).get(LANGUAGE_HEADER_NAME);
+    if (languageHeader) {
+      const headerLocale = languageHeader.split(",")[0].split("-")[0];
+      if (allowedLanguages.includes(headerLocale)) {
+        locale = headerLocale;
+      }
     }
   }
 
-  const i18nOrganization = _headers.get("x-zitadel-i18n-organization") || ""; // You may need to set this header in middleware
+  const i18nOrganization = _headers.get("x-zitadel-i18n-organization") || "";
 
   let translations: JsonObject | Record<string, never> = {};
   try {
