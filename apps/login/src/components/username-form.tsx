@@ -29,6 +29,7 @@ type Props = {
   hideSuffix?: boolean;
   submit: boolean;
   allowRegister: boolean;
+  helpLink?: string;
 };
 
 export function UsernameForm({
@@ -41,6 +42,7 @@ export function UsernameForm({
   loginSettings,
   submit,
   allowRegister,
+  helpLink,
 }: Props) {
   const { register, handleSubmit, formState } = useForm<Inputs>({
     mode: "onChange",
@@ -140,8 +142,31 @@ export function UsernameForm({
         </div>
 
         {error && (
-          <div className="py-4" data-testid="error">
+          <div className="space-y-3 py-3" data-testid="error">
             <Alert>{error}</Alert>
+            {helpLink && (
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 rounded-2xl border border-blue-100 bg-blue-50/70 p-3.5 text-xs dark:border-blue-900/40 dark:bg-blue-950/40">
+                <div className="flex items-center gap-2.5 text-slate-700 dark:text-slate-300">
+                  <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[#0F91FC]/10 text-[#0F91FC] dark:bg-[#0F91FC]/20 dark:text-[#38BDF8]">
+                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                  <span className="font-semibold text-slate-800 dark:text-slate-200">
+                    <Translated i18nKey="accountNotFound.needHelpVerification" namespace="idp" />
+                  </span>
+                </div>
+                <a
+                  href={helpLink}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex shrink-0 items-center gap-1.5 rounded-xl bg-[#0F91FC] px-3.5 py-2 text-xs font-bold text-white shadow-sm transition-all hover:bg-[#0866C6] hover:shadow-md"
+                >
+                  <span><Translated i18nKey="accountNotFound.helpAndVerification" namespace="idp" /></span>
+                  <span className="text-[11px]">↗</span>
+                </a>
+              </div>
+            )}
           </div>
         )}
         <div className="mt-4 flex w-full flex-row items-center">

@@ -71,26 +71,24 @@ export default async function Page(props: { searchParams: Promise<Record<string 
 
         {/* Support & Action Links */}
         <div className="flex flex-col space-y-3 pt-2">
-          {helpLink && (
+          {helpLink ? (
             <a
               href={helpLink}
               target="_blank"
               rel="noreferrer"
-              className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#0F91FC] px-4 py-3.5 text-center text-sm font-bold text-white shadow-md transition-all hover:bg-[#0866C6] hover:shadow-lg"
+              className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#0F91FC] px-4 py-3.5 text-center text-xs font-bold text-white shadow-md transition-all hover:bg-[#0866C6] hover:shadow-lg"
             >
-              <span>Buka Layanan Bantuan / Verifikasi</span>
+              <span><Translated i18nKey="accountNotFound.helpAndVerification" namespace="idp" /></span>
               <span className="text-xs">↗</span>
             </a>
-          )}
-
-          {supportEmail && (
+          ) : supportEmail ? (
             <a
               href={`mailto:${supportEmail}`}
-              className="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-center text-xs font-semibold text-slate-700 transition-all hover:bg-slate-100 dark:border-slate-800 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+              className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#0F91FC] px-4 py-3.5 text-center text-xs font-bold text-white shadow-md transition-all hover:bg-[#0866C6] hover:shadow-lg"
             >
-              <span>Hubungi Dukungan: {supportEmail}</span>
+              <span>Hubungi Dukungan ({supportEmail})</span>
             </a>
-          )}
+          ) : null}
 
           <Link href={postErrorRedirectUrl || "/loginname"} className="w-full">
             <Button

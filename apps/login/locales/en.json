@@ -178,9 +178,11 @@
       "description": "You need to complete your registration by providing your email address and name."
     },
     "accountNotFound": {
-      "title": "Account Not Found",
-      "description": "We couldn't find an account associated with your identity provider credentials.",
-      "info": "No existing account was found. Please sign in with an existing account or contact your administrator for assistance.",
+      "title": "Account Not Registered",
+      "description": "The account you are using is not registered or not yet verified in the system.",
+      "info": "To maintain system integrity and data security, account registration and verification are handled through the official help service.",
+      "helpAndVerification": "Open Help & Verification Service",
+      "needHelpVerification": "Account not registered or need verification?",
       "backToLogin": "Back to Login"
     },
     "registrationFailed": {

@@ -184,10 +184,12 @@
       "description": "Anda perlu melengkapi pendaftaran dengan mengisi alamat email dan nama Anda."
     },
     "accountNotFound": {
-      "title": "Akun Tidak Ditemukan",
-      "description": "Kami tidak menemukan akun yang terkait dengan kredensial penyedia identitas Anda.",
-      "info": "Tidak ada akun terdaftar yang cocok. Silakan masuk dengan akun yang sudah ada atau hubungi administrator untuk bantuan.",
-      "backToLogin": "Kembali ke Login"
+      "title": "Akun Belum Terdaftar",
+      "description": "Akun yang Anda gunakan belum terdaftar atau belum diverifikasi dalam sistem.",
+      "info": "Untuk menjaga integritas dan keamanan data, pendaftaran serta verifikasi akun dilakukan melalui layanan bantuan resmi.",
+      "helpAndVerification": "Buka Layanan Bantuan & Verifikasi",
+      "needHelpVerification": "Akun belum terdaftar atau butuh verifikasi?",
+      "backToLogin": "Kembali ke Halaman Masuk"
     },
     "registrationFailed": {
       "title": "Pendaftaran Tidak Tersedia",

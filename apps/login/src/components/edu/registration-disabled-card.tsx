@@ -65,14 +65,14 @@ export function RegistrationDisabledCard({ orgName, legal, loginUrl = "/loginnam
           Kembali ke Masuk
         </Link>
 
-        {supportLink ? (
+        {supportLink && (
           <Link
             href={supportLink}
             target="_blank"
             rel="noreferrer"
-            className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-[#0F91FC] px-5 py-3.5 text-center text-xs font-bold text-white shadow-lg transition-all hover:bg-[#0a78d6]"
+            className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-[#0F91FC] px-5 py-3.5 text-center text-xs font-bold text-white shadow-lg transition-all hover:bg-[#0866C6]"
           >
-            Hubungi Bantuan
+            Buka Layanan Bantuan & Verifikasi
             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path
                 strokeLinecap="round"
@@ -82,7 +82,7 @@ export function RegistrationDisabledCard({ orgName, legal, loginUrl = "/loginnam
               />
             </svg>
           </Link>
-        ) : null}
+        )}
       </div>
 
       {/* Footer Info */}

@@ -163,6 +163,7 @@ export default async function Page(props: { searchParams: Promise<Record<string 
             hideSuffix={branding?.hideLoginNameSuffix}
             submit={submit}
             allowRegister={!!loginSettings?.allowRegister}
+            helpLink={helpLink}
           />
         )}
       </div>
