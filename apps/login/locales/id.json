@@ -291,13 +291,14 @@
     }
   },
   "u2f": {
-    "title": "Kunci Keamanan Perangkat",
-    "description": "Gunakan kunci keamanan perangkat Anda untuk masuk",
-    "submit": "Lanjutkan",
+    "verify": {
+      "title": "Verifikasi Faktor Kedua (U2F)",
+      "description": "Verifikasi akun Anda menggunakan kunci keamanan perangkat."
+    },
     "set": {
-      "title": "Daftarkan Kunci Keamanan",
-      "description": "Hubungkan kunci keamanan hardware (U2F/FIDO) ke perangkat Anda",
-      "submit": "Daftarkan Kunci",
+      "title": "Atur Faktor Kedua (U2F)",
+      "description": "Hubungkan kunci keamanan hardware (U2F/FIDO) ke perangkat Anda.",
+      "submit": "Lanjutkan",
       "labels": {
         "name": "Nama Kunci Keamanan"
       }
@@ -435,6 +436,21 @@
       "email": "Melihat alamat email Anda.",
       "profile": "Melihat informasi profil lengkap Anda.",
       "offline_access": "Mengizinkan akses offline ke akun Anda."
+    }
+  },
+  "authenticator": {
+    "title": "Pilih Metode Otentikasi",
+    "description": "Pilih metode yang ingin Anda gunakan untuk verifikasi",
+    "noMethodsAvailable": "Tidak ada metode otentikasi yang tersedia",
+    "allSetup": "Anda telah mengatur metode otentikasi!",
+    "linkWithIDP": "atau tautkan dengan Penyedia Identitas",
+    "methods": {
+      "totp": "Aplikasi Otentikator (TOTP)",
+      "u2f": "Kunci Keamanan (U2F/FIDO2)",
+      "otpEmail": "Kode via Email",
+      "otpSms": "Kode via SMS",
+      "passkey": "Passkey",
+      "password": "Kata Sandi"
     }
   },
   "error": {
