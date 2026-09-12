@@ -113,9 +113,13 @@ export function UsernameForm({
             autoFocus
             {...register("loginName", { required: t("required.loginName") })}
             label={inputLabel}
+            placeholder={t("placeholders.loginname")}
             data-testid="username-text-input"
             suffix={hideSuffix ? undefined : suffix}
           />
+          <p className="mt-0.5 mb-1.5 text-[11px] font-medium text-slate-500 dark:text-slate-400">
+            {t("hint")}
+          </p>
           {allowRegister && (
             <div className="mt-2 text-right">
               <button

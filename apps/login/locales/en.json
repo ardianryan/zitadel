@@ -28,11 +28,15 @@
     "register": "Register new user",
     "submit": "Continue",
     "labels": {
-      "loginname": "Loginname",
-      "username": "Username",
-      "usernameOrPhoneNumber": "Username or phone number",
-      "usernameOrEmail": "Username or email"
+      "loginname": "Email or Account Identity",
+      "username": "Username / Account Identity",
+      "usernameOrPhoneNumber": "Email, Phone, or Account Identity",
+      "usernameOrEmail": "Email or Account Identity"
     },
+    "placeholders": {
+      "loginname": "email@school / Student ID / Employee ID"
+    },
+    "hint": "Use Email, Student ID (NISN), or Employee ID (NIP)",
     "required": {
       "loginName": "This field is required"
     },
@@ -480,7 +484,7 @@
     "welcome": "Welcome to {orgName}",
     "singleSignOnTitle": "Single Account, Single Sign On login",
     "singleSignOnSubtitle": "Log in to access the integrated learning ecosystem.",
-    "orSignInWithEmail": "Or log in with email / username",
+    "orSignInWithEmail": "Or sign in with Email / Student ID / Employee ID",
     "helpAndVerification": "Help / Account Verification",
     "registerNewAccount": "Register New Account",
     "termsOfService": "Terms of Service",

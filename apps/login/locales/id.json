@@ -28,11 +28,15 @@
     "register": "Daftar akun baru",
     "submit": "Lanjutkan",
     "labels": {
-      "loginname": "Nama Masuk",
-      "username": "Nama Pengguna",
-      "usernameOrPhoneNumber": "Nama Pengguna atau Nomor Telepon",
-      "usernameOrEmail": "Nama Pengguna atau Email"
+      "loginname": "Email atau Identitas Akun",
+      "username": "Nama Pengguna / Identitas Akun",
+      "usernameOrPhoneNumber": "Email, No. HP, atau Identitas Akun",
+      "usernameOrEmail": "Email atau Identitas Akun"
     },
+    "placeholders": {
+      "loginname": "email@sekolah / NISN / NIP"
+    },
+    "hint": "Gunakan Email, NISN (Siswa), atau NIP (Guru/Staf)",
     "required": {
       "loginName": "Kolom ini wajib diisi"
     },
@@ -469,7 +473,7 @@
     "welcome": "Selamat Datang di {orgName}",
     "singleSignOnTitle": "Single Account, Single Sign On login",
     "singleSignOnSubtitle": "Masuk untuk mengakses seluruh ekosistem layanan pembelajaran terpadu.",
-    "orSignInWithEmail": "Atau masuk dengan surel / nama akun",
+    "orSignInWithEmail": "Atau masuk dengan Email / NISN / NIP",
     "helpAndVerification": "Bantuan / Verifikasi Akun",
     "registerNewAccount": "Daftar Akun Baru",
     "termsOfService": "Ketentuan Layanan",
