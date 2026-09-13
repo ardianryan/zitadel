@@ -172,14 +172,16 @@ export function PasswordForm({
                     </p>
                   </div>
                   <div className="flex flex-wrap items-center gap-2 pt-1">
-                    <button
-                      type="button"
-                      disabled={loading}
-                      onClick={() => resetPasswordAndContinue()}
-                      className="inline-flex items-center justify-center rounded-lg bg-white px-3 py-1.5 text-xs font-semibold text-blue-600 shadow-sm ring-1 ring-slate-200 transition-colors hover:bg-slate-50 hover:text-blue-700 dark:bg-slate-800 dark:text-sky-400 dark:ring-slate-700 dark:hover:bg-slate-700"
-                    >
-                      <Translated i18nKey="verify.helpActionReset" namespace="password" />
-                    </button>
+                    {!loginSettings?.hidePasswordReset && (
+                      <button
+                        type="button"
+                        disabled={loading}
+                        onClick={() => resetPasswordAndContinue()}
+                        className="inline-flex items-center justify-center rounded-lg bg-white px-3 py-1.5 text-xs font-semibold text-blue-600 shadow-sm ring-1 ring-slate-200 transition-colors hover:bg-slate-50 hover:text-blue-700 dark:bg-slate-800 dark:text-sky-400 dark:ring-slate-700 dark:hover:bg-slate-700"
+                      >
+                        <Translated i18nKey="verify.helpActionReset" namespace="password" />
+                      </button>
+                    )}
                     {helpLink && (
                       <a
                         href={helpLink}
