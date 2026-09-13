@@ -54,7 +54,7 @@
       "localAuthenticationNotAllowed": "Local authentication is not allowed! Contact your administrator for more information.",
       "passkeysNotAllowed": "Passkeys not allowed! Contact your administrator for more information.",
       "couldNotFindIdentityProvider": "Could not find identity provider.",
-      "userNotActive": "User is not active. Contact your administrator for more information."
+      "userNotActive": "Your account is currently locked or inactive. Please reset your password or contact help service."
     }
   },
   "zitadel": {
@@ -69,6 +69,10 @@
       "title": "Password",
       "description": "Enter your password.",
       "resetPassword": "Reset Password",
+      "helpUnlock": "Account locked or need help?",
+      "helpUnlockDesc": "If your account is locked due to incorrect password attempts or other access issues, you can restore access by resetting your password or visiting the official help service.",
+      "helpActionReset": "Recover / Reset Password",
+      "openHelp": "School Help Service",
       "submit": "Continue",
       "labels": {
         "password": "Password"
@@ -145,7 +149,7 @@
       "couldNotVerifyPassword": "Could not verify password",
       "failedToAuthenticate": "Failed to authenticate. You had {failedAttempts} of {maxPasswordAttempts} password attempts.{lockoutMessage}",
       "failedToAuthenticateNoLimit": "Failed to authenticate.",
-      "accountLockedContactAdmin": " Contact your administrator to unlock your account",
+      "accountLockedContactAdmin": " Your account is locked for security. Please reset your password or contact help service to unlock.",
       "userNotFound": "User not found in the system",
       "initialUserNotSupported": "Initial User not supported",
       "userInitialStateNotSupported": "User Initial State is not supported",

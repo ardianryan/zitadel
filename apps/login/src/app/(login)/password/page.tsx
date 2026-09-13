@@ -3,12 +3,13 @@ import { DynamicTheme } from "@/components/dynamic-theme";
 import { PasswordForm } from "@/components/password-form";
 import { Translated } from "@/components/translated";
 import { UserAvatar } from "@/components/user-avatar";
+import { resolveLocalizedLegalLink } from "@/lib/legal-links";
 import { getServiceConfig } from "@/lib/service-url";
 import { loadMostRecentSession } from "@/lib/session";
 import { getBrandingSettings, getDefaultOrg, getLegalAndSupportSettings, getLoginSettings, getOrgById } from "@/lib/zitadel";
 import { Organization } from "@zitadel/proto/zitadel/org/v2/org_pb";
 import { Metadata } from "next";
-import { getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 import { headers } from "next/headers";
 
 export async function generateMetadata(props: {
@@ -75,6 +76,8 @@ export default async function Page(props: { searchParams: Promise<Record<string 
     serviceConfig,
     organization: effectiveOrgId,
   });
+  const locale = await getLocale();
+  const helpLink = resolveLocalizedLegalLink(legal?.helpLink, locale);
 
   return (
     <DynamicTheme branding={branding} orgName={orgName} appName={orgName || "ZITADEL"} legal={legal}>
@@ -118,6 +121,7 @@ export default async function Page(props: { searchParams: Promise<Record<string 
             organization={organization}
             defaultOrganization={defaultOrganization}
             loginSettings={loginSettings}
+            helpLink={helpLink}
           />
         )}
       </div>

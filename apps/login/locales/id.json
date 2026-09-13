@@ -54,7 +54,7 @@
       "localAuthenticationNotAllowed": "Autentikasi lokal tidak diizinkan! Hubungi administrator Anda.",
       "passkeysNotAllowed": "Passkey tidak diizinkan! Hubungi administrator Anda.",
       "couldNotFindIdentityProvider": "Penyedia identitas tidak ditemukan.",
-      "userNotActive": "Akun pengguna tidak aktif. Hubungi administrator Anda."
+      "userNotActive": "Akun Anda sedang terkunci atau dinonaktifkan sementara. Silakan lakukan reset kata sandi atau buka layanan bantuan."
     }
   },
   "zitadel": {
@@ -69,6 +69,10 @@
       "title": "Kata Sandi",
       "description": "Masukkan kata sandi Anda.",
       "resetPassword": "Lupa Kata Sandi?",
+      "helpUnlock": "Akun terkunci atau butuh bantuan?",
+      "helpUnlockDesc": "Jika akun Anda terkunci karena salah memasukkan kata sandi atau kendala akses lainnya, Anda dapat memulihkannya dengan melakukan reset kata sandi atau membuka layanan bantuan resmi.",
+      "helpActionReset": "Pulihkan / Reset Kata Sandi",
+      "openHelp": "Layanan Bantuan Sekolah",
       "submit": "Lanjutkan",
       "labels": {
         "password": "Kata Sandi"
@@ -151,7 +155,7 @@
       "couldNotVerifyPassword": "Kata sandi salah atau tidak dapat diverifikasi",
       "failedToAuthenticate": "Gagal mengotentikasi. Percobaan tersisa: {failedAttempts} dari {maxPasswordAttempts}.{lockoutMessage}",
       "failedToAuthenticateNoLimit": "Gagal mengotentikasi.",
-      "accountLockedContactAdmin": " Akun Anda terkunci. Hubungi administrator sekolah.",
+      "accountLockedContactAdmin": " Akun Anda telah terkunci untuk keamanan. Silakan reset kata sandi atau buka layanan bantuan untuk membuka kunci akun.",
       "userNotFound": "Pengguna tidak ditemukan dalam sistem",
       "initialUserNotSupported": "Pengguna awal tidak didukung",
       "userInitialStateNotSupported": "Status awal pengguna tidak didukung",

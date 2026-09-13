@@ -27,9 +27,17 @@ type Props = {
   organization?: string;
   defaultOrganization?: string;
   requestId?: string;
+  helpLink?: string;
 };
 
-export function PasswordForm({ loginSettings, loginName, organization, defaultOrganization, requestId }: Props) {
+export function PasswordForm({
+  loginSettings,
+  loginName,
+  organization,
+  defaultOrganization,
+  requestId,
+  helpLink,
+}: Props) {
   const { register, handleSubmit, formState } = useForm<Inputs>({
     mode: "onChange",
   });
@@ -145,8 +153,50 @@ export function PasswordForm({ loginSettings, loginName, organization, defaultOr
         )}
 
         {error && (
-          <div className="py-4" data-testid="error">
+          <div className="py-3" data-testid="error">
             <Alert>{error}</Alert>
+            <div className="mt-3 rounded-xl border border-amber-200/80 bg-amber-50/80 p-3.5 text-xs text-slate-700 shadow-sm backdrop-blur transition-all dark:border-amber-900/40 dark:bg-amber-950/30 dark:text-slate-300">
+              <div className="flex items-start gap-2.5">
+                <div className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-amber-100 text-amber-600 dark:bg-amber-900/60 dark:text-amber-400">
+                  <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                  </svg>
+                </div>
+                <div className="flex-1 space-y-2">
+                  <div>
+                    <p className="font-semibold text-slate-900 dark:text-white">
+                      <Translated i18nKey="verify.helpUnlock" namespace="password" />
+                    </p>
+                    <p className="mt-0.5 leading-relaxed text-slate-600 dark:text-slate-400">
+                      <Translated i18nKey="verify.helpUnlockDesc" namespace="password" />
+                    </p>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2 pt-1">
+                    <button
+                      type="button"
+                      disabled={loading}
+                      onClick={() => resetPasswordAndContinue()}
+                      className="inline-flex items-center justify-center rounded-lg bg-white px-3 py-1.5 text-xs font-semibold text-blue-600 shadow-sm ring-1 ring-slate-200 transition-colors hover:bg-slate-50 hover:text-blue-700 dark:bg-slate-800 dark:text-sky-400 dark:ring-slate-700 dark:hover:bg-slate-700"
+                    >
+                      <Translated i18nKey="verify.helpActionReset" namespace="password" />
+                    </button>
+                    {helpLink && (
+                      <a
+                        href={helpLink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center justify-center gap-1 rounded-lg bg-amber-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition-colors hover:bg-amber-700 dark:bg-amber-600 dark:hover:bg-amber-500"
+                      >
+                        <span><Translated i18nKey="verify.openHelp" namespace="password" /></span>
+                        <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                        </svg>
+                      </a>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         )}
 
