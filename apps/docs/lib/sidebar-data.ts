@@ -663,6 +663,7 @@ export const guidesSidebar: readonly SidebarItem[] = [
           "guides/integrate/retrieve-user-roles",
           "concepts/structure/granted_projects",
           "guides/manage/console/administrators",
+          "guides/manage/console/administrator-hardening",
         ],
       },
       {
@@ -972,6 +973,11 @@ export const apisSidebar: readonly SidebarItem[] = [
     type: "doc",
     label: "gRPC Status Codes",
     id: "apis/statuscodes",
+  },
+  {
+    type: "doc",
+    label: "Error Reference",
+    id: "apis/errors",
   },
   {
     type: "link",
