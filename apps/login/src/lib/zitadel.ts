@@ -103,27 +103,32 @@ export async function getHostedLoginTranslation({
   locale?: string;
 }>) {
   const fetcher = async () => {
-    const settingsService: Client<typeof SettingsService> = await createServiceForHost(SettingsService, serviceConfig);
+    try {
+      const settingsService: Client<typeof SettingsService> = await createServiceForHost(SettingsService, serviceConfig);
 
-    return settingsService
-      .getHostedLoginTranslation(
-        {
-          level: organization
-            ? {
-                case: "organizationId",
-                value: organization,
-              }
-            : {
-                case: "instance",
-                value: true,
-              },
-          locale: locale,
-        },
-        {},
-      )
-      .then((resp) => {
-        return resp.translations ? resp.translations : undefined;
-      });
+      return await settingsService
+        .getHostedLoginTranslation(
+          {
+            level: organization
+              ? {
+                  case: "organizationId",
+                  value: organization,
+                }
+              : {
+                  case: "instance",
+                  value: true,
+                },
+            locale: locale,
+          },
+          {},
+        )
+        .then((resp) => {
+          return resp.translations ? resp.translations : {};
+        })
+        .catch(() => ({}));
+    } catch {
+      return {};
+    }
   };
 
   return freshCache(

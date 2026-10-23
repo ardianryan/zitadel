@@ -28,7 +28,8 @@ export class PromiseCache {
       noDeleteOnFetchRejection: true,
       allowStaleOnFetchRejection: true,
       fetchMethod: async (_key, _staleValue, { context }) => {
-        return context.fetcher();
+        const val = await context.fetcher();
+        return val === undefined ? null : val;
       },
       ...(perf ? { perf, ttlResolution: 0 } : {}),
     });
