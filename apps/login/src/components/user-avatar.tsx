@@ -11,11 +11,12 @@ function getUserAvatarRoundness(): string {
 type Props = {
   loginName?: string;
   displayName?: string;
+  email?: string;
   showDropdown: boolean;
   searchParams?: Record<string | number | symbol, string | undefined>;
 };
 
-export function UserAvatar({ loginName, displayName, showDropdown, searchParams }: Props) {
+export function UserAvatar({ loginName, displayName, email, showDropdown, searchParams }: Props) {
   const params = new URLSearchParams({});
   const userAvatarRoundness = getUserAvatarRoundness();
 
@@ -35,17 +36,34 @@ export function UserAvatar({ loginName, displayName, showDropdown, searchParams 
     params.set("loginName", searchParams.loginName);
   }
 
+  const effectiveDisplayName = displayName || loginName;
+  const showSubtext = Boolean(displayName && loginName && displayName !== loginName);
+
   return (
     <div className={`flex h-full flex-row items-center border p-[1px] dark:border-white/20 ${userAvatarRoundness}`}>
       <div>
-        <Avatar size="small" name={displayName ?? loginName ?? ""} loginName={loginName ?? ""} />
+        <Avatar
+          size="small"
+          name={effectiveDisplayName ?? ""}
+          loginName={loginName ?? ""}
+          email={email}
+        />
       </div>
-      <span className="text-14px ml-4 max-w-[250px] overflow-hidden pr-4 text-ellipsis">{loginName}</span>
+      <div className="ml-3 flex flex-col justify-center overflow-hidden pr-2 text-left">
+        <span className="text-14px font-medium max-w-[240px] truncate text-slate-900 dark:text-white">
+          {effectiveDisplayName}
+        </span>
+        {showSubtext && (
+          <span className="text-[11px] leading-tight max-w-[240px] truncate text-slate-500 dark:text-slate-400">
+            {loginName}
+          </span>
+        )}
+      </div>
       <span className="flex-grow"></span>
       {showDropdown && (
         <Link
           href={"/accounts?" + params}
-          className={`mr-1 ml-4 flex items-center justify-center p-1 transition-all hover:bg-black/10 dark:hover:bg-white/10 ${userAvatarRoundness}`}
+          className={`mr-1 ml-2 flex items-center justify-center p-1 transition-all hover:bg-black/10 dark:hover:bg-white/10 ${userAvatarRoundness}`}
         >
           <ChevronDownIcon className="h-4 w-4" />
         </Link>

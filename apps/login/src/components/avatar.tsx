@@ -9,6 +9,7 @@ import { useState } from "react";
 interface AvatarProps {
   name: string | null | undefined;
   loginName: string;
+  email?: string;
   imageUrl?: string;
   size?: "small" | "base" | "large";
   shadow?: boolean;
@@ -37,7 +38,7 @@ function getAvatarRoundness(): string {
   return getComponentRoundness("avatar");
 }
 
-export function Avatar({ size = "base", name, loginName, imageUrl, shadow }: AvatarProps) {
+export function Avatar({ size = "base", name, loginName, email, imageUrl, shadow }: AvatarProps) {
   const { resolvedTheme } = useTheme();
   const [imageFailed, setImageFailed] = useState(false);
   const credentials = getInitials(name ?? loginName, loginName);
@@ -55,7 +56,7 @@ export function Avatar({ size = "base", name, loginName, imageUrl, shadow }: Ava
     color: color[900],
   };
 
-  const gravatarUrl = getGravatarUrl(loginName);
+  const gravatarUrl = getGravatarUrl(email || (loginName?.includes("@") ? loginName : undefined));
   const effectiveImageUrl = !imageFailed ? imageUrl || gravatarUrl : null;
 
   return (

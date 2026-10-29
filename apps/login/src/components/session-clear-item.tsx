@@ -62,13 +62,22 @@ export function SessionClearItem({ session, reload }: { session: Session; reload
           <Avatar
             size="small"
             loginName={session.factors?.user?.loginName as string}
-            name={session.factors?.user?.displayName ?? ""}
+            name={session.factors?.user?.displayName || session.factors?.user?.loginName || ""}
+            email={(session as any).email}
           />
         </div>
 
-        <div className="flex flex-col items-start overflow-hidden">
-          <span className="">{session.factors?.user?.displayName}</span>
-          <span className="text-xs text-ellipsis opacity-80">{session.factors?.user?.loginName}</span>
+        <div className="flex flex-col items-start overflow-hidden text-left">
+          <span className="font-semibold text-slate-900 truncate dark:text-white">
+            {session.factors?.user?.displayName || session.factors?.user?.loginName}
+          </span>
+          {session.factors?.user?.displayName &&
+            session.factors?.user?.loginName &&
+            session.factors?.user?.displayName !== session.factors?.user?.loginName && (
+              <span className="text-xs text-slate-500 truncate opacity-80 dark:text-slate-400">
+                {session.factors?.user?.loginName}
+              </span>
+            )}
           {valid ? (
             <span className="text-xs text-ellipsis opacity-80">
               {verifiedAt && (

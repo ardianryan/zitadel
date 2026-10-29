@@ -722,7 +722,7 @@ export async function listUsers({ serviceConfig, loginName, userName, phone, ema
 
 export type SearchUsersCommand = WithServiceConfig<{
   searchValue: string;
-  loginSettings: LoginSettings;
+  loginSettings?: Partial<LoginSettings> | LoginSettings;
   organizationId?: string;
   suffix?: string;
 }>;
@@ -815,13 +815,13 @@ export async function searchUsers({
   }
 
   const emailAndPhoneQueries: SearchQuery[] = [];
-  if (loginSettings.disableLoginWithEmail && loginSettings.disableLoginWithPhone) {
+  if (loginSettings?.disableLoginWithEmail && loginSettings?.disableLoginWithPhone) {
     // Both email and phone login are disabled, return empty result
     return { result: [] };
-  } else if (loginSettings.disableLoginWithEmail && searchValue.length <= 20) {
+  } else if (loginSettings?.disableLoginWithEmail && searchValue.length <= 20) {
     const phoneQuery = PhoneQuery(searchValue);
     emailAndPhoneQueries.push(phoneQuery);
-  } else if (loginSettings.disableLoginWithPhone) {
+  } else if (loginSettings?.disableLoginWithPhone) {
     const emailQuery = EmailQuery(searchValue);
     emailAndPhoneQueries.push(emailQuery);
   } else {

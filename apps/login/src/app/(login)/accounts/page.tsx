@@ -4,7 +4,7 @@ import { SessionsList } from "@/components/sessions-list";
 import { Translated } from "@/components/translated";
 import { getAllSessions } from "@/lib/cookies";
 import { getServiceConfig } from "@/lib/service-url";
-import { getAuthRequest, getBrandingSettings, getDefaultOrg, listSessions, ServiceConfig } from "@/lib/zitadel";
+import { getAuthRequest, getBrandingSettings, getDefaultOrg, listSessions, searchUsers, ServiceConfig } from "@/lib/zitadel";
 import { UserPlusIcon } from "@heroicons/react/24/outline";
 import { create } from "@zitadel/client";
 import { Organization } from "@zitadel/proto/zitadel/org/v2/org_pb";
@@ -47,23 +47,58 @@ async function loadSessions({ serviceConfig, organization }: { serviceConfig: Se
   const liveIds = new Set(liveSessions.map((s) => s.id));
   const synthesized: Session[] = sessionCookies
     .filter((c) => !!c.id && !!c.loginName && !liveIds.has(c.id))
-    .map((c) =>
-      create(SessionSchema, {
+    .map((c) => {
+      const s = create(SessionSchema, {
         id: c.id,
         factors: {
           user: {
             loginName: c.loginName,
-            // No displayName: the cookie does not carry one, and reusing the
-            // loginName would render it twice and break the avatar initials.
+            displayName: c.displayName,
             organizationId: c.organization ?? "",
           },
         },
-      }),
-    );
+      });
+      if (c.email) {
+        (s as any).email = c.email;
+      }
+      return s;
+    });
 
   let sessions = [...liveSessions, ...synthesized];
   if (organization) {
     sessions = sessions.filter((s) => s.factors?.user?.organizationId === organization);
+  }
+
+  // Enrich sessions that are missing displayName or email (e.g. existing cookies from before displayName was stored)
+  const sessionsToEnrich = sessions.filter(
+    (s) => (!s.factors?.user?.displayName || s.factors.user.displayName === s.factors.user.loginName) && s.factors?.user?.loginName,
+  );
+
+  if (sessionsToEnrich.length > 0) {
+    await Promise.all(
+      sessionsToEnrich.map(async (s) => {
+        try {
+          const res = await searchUsers({
+            serviceConfig,
+            searchValue: s.factors!.user!.loginName,
+            organizationId: s.factors?.user?.organizationId || organization,
+            loginSettings: { disableLoginWithEmail: false, disableLoginWithPhone: false },
+          });
+          if (res && "result" in res && res.result && res.result.length === 1) {
+            const foundUser = res.result[0];
+            const human = foundUser.type.case === "human" ? foundUser.type.value : undefined;
+            if (human?.profile?.displayName) {
+              s.factors!.user!.displayName = human.profile.displayName;
+            }
+            if (human?.email?.email) {
+              (s as any).email = human.email.email;
+            }
+          }
+        } catch {
+          // Gracefully ignore user lookup errors
+        }
+      }),
+    );
   }
 
   return sessions;

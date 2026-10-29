@@ -24,6 +24,8 @@ type CustomCookieData = {
   id: string;
   token: string;
   loginName: string;
+  displayName?: string;
+  email?: string;
   organization?: string;
   creationTs: string;
   expirationTs: string;
@@ -85,6 +87,7 @@ export async function createSessionAndUpdateCookie(command: {
           expirationTs: response.session.expirationDate ? `${timestampMs(response.session.expirationDate)}` : "",
           changeTs: response.session.changeDate ? `${timestampMs(response.session.changeDate)}` : "",
           loginName: response.session.factors.user.loginName ?? "",
+          displayName: response.session.factors.user.displayName,
         };
 
         if (command.requestId) {
@@ -175,6 +178,7 @@ export async function createSessionForIdpAndUpdateCookie({
     expirationTs: session.expirationDate ? `${timestampMs(session.expirationDate)}` : "",
     changeTs: session.changeDate ? `${timestampMs(session.changeDate)}` : "",
     loginName: session.factors.user.loginName ?? "",
+    displayName: session.factors.user.displayName,
     organization: session.factors.user.organizationId ?? "",
   };
 
@@ -248,6 +252,8 @@ export async function setSessionAndUpdateCookie(command: {
               // just overwrite the changeDate with the new one
               changeTs: updatedSession.details?.changeDate ? `${timestampMs(updatedSession.details.changeDate)}` : "",
               loginName: session.factors?.user?.loginName ?? "",
+              displayName: session.factors?.user?.displayName ?? command.recentCookie.displayName,
+              email: command.recentCookie.email,
               organization: session.factors?.user?.organizationId ?? "",
             };
 

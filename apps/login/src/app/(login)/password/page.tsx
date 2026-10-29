@@ -6,7 +6,7 @@ import { UserAvatar } from "@/components/user-avatar";
 import { resolveLocalizedLegalLink } from "@/lib/legal-links";
 import { getServiceConfig } from "@/lib/service-url";
 import { loadMostRecentSession } from "@/lib/session";
-import { getBrandingSettings, getDefaultOrg, getLegalAndSupportSettings, getLoginSettings, getOrgById } from "@/lib/zitadel";
+import { getBrandingSettings, getDefaultOrg, getLegalAndSupportSettings, getLoginSettings, getOrgById, searchUsers } from "@/lib/zitadel";
 import { Organization } from "@zitadel/proto/zitadel/org/v2/org_pb";
 import { Metadata } from "next";
 import { getLocale, getTranslations } from "next-intl/server";
@@ -79,6 +79,34 @@ export default async function Page(props: { searchParams: Promise<Record<string 
   const locale = await getLocale();
   const helpLink = resolveLocalizedLegalLink(legal?.helpLink, locale);
 
+  let displayName = sessionFactors?.factors?.user?.displayName;
+  let userEmail: string | undefined;
+
+  if ((!displayName || displayName === loginName) && loginName && !loginSettings?.ignoreUnknownUsernames) {
+    try {
+      const res = await searchUsers({
+        serviceConfig,
+        searchValue: loginName,
+        organizationId: effectiveOrgId,
+        loginSettings: { disableLoginWithEmail: false, disableLoginWithPhone: false },
+      });
+      if (res && "result" in res && res.result && res.result.length === 1) {
+        const found = res.result[0];
+        const human = found.type.case === "human" ? found.type.value : undefined;
+        if (human?.profile?.displayName) {
+          displayName = human.profile.displayName;
+        }
+        if (human?.email?.email) {
+          userEmail = human.email.email;
+        }
+      }
+    } catch {
+      // Gracefully ignore user lookup errors
+    }
+  }
+
+  const effectiveLoginName = loginName ?? sessionFactors?.factors?.user?.loginName;
+
   return (
     <DynamicTheme branding={branding} orgName={orgName} appName={orgName || "ZITADEL"} legal={legal}>
       <div className="flex flex-col space-y-4">
@@ -89,15 +117,14 @@ export default async function Page(props: { searchParams: Promise<Record<string 
           <Translated i18nKey="verify.description" namespace="password" />
         </p>
 
-        {sessionFactors ? (
+        {effectiveLoginName ? (
           <UserAvatar
-            loginName={loginName ?? sessionFactors.factors?.user?.loginName}
-            displayName={sessionFactors.factors?.user?.displayName}
+            loginName={effectiveLoginName}
+            displayName={displayName}
+            email={userEmail}
             showDropdown
             searchParams={searchParams}
-          ></UserAvatar>
-        ) : loginName ? (
-          <UserAvatar loginName={loginName} displayName={loginName} showDropdown searchParams={searchParams}></UserAvatar>
+          />
         ) : null}
       </div>
 

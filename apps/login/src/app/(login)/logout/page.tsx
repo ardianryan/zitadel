@@ -4,7 +4,7 @@ import { Translated } from "@/components/translated";
 import { isSafeRedirectUri } from "@/lib/client-utils";
 import { getAllSessionCookieIds } from "@/lib/cookies";
 import { getServiceConfig } from "@/lib/service-url";
-import { getBrandingSettings, getDefaultOrg, listSessions, ServiceConfig } from "@/lib/zitadel";
+import { getBrandingSettings, getDefaultOrg, listSessions, searchUsers, ServiceConfig } from "@/lib/zitadel";
 import { verifyJwt } from "@zitadel/client/node";
 import { Organization } from "@zitadel/proto/zitadel/org/v2/org_pb";
 import { Metadata } from "next";
@@ -21,7 +21,40 @@ async function loadSessions({ serviceConfig }: { serviceConfig: ServiceConfig })
 
   if (cookieIds && cookieIds.length) {
     const response = await listSessions({ serviceConfig, ids: cookieIds.filter((id) => !!id) as string[] });
-    return response?.sessions ?? [];
+    const sessions = response?.sessions ?? [];
+
+    const sessionsToEnrich = sessions.filter(
+      (s) => (!s.factors?.user?.displayName || s.factors.user.displayName === s.factors.user.loginName) && s.factors?.user?.loginName,
+    );
+
+    if (sessionsToEnrich.length > 0) {
+      await Promise.all(
+        sessionsToEnrich.map(async (s) => {
+          try {
+            const res = await searchUsers({
+              serviceConfig,
+              searchValue: s.factors!.user!.loginName,
+              organizationId: s.factors?.user?.organizationId,
+              loginSettings: { disableLoginWithEmail: false, disableLoginWithPhone: false },
+            });
+            if (res && "result" in res && res.result && res.result.length === 1) {
+              const foundUser = res.result[0];
+              const human = foundUser.type.case === "human" ? foundUser.type.value : undefined;
+              if (human?.profile?.displayName) {
+                s.factors!.user!.displayName = human.profile.displayName;
+              }
+              if (human?.email?.email) {
+                (s as any).email = human.email.email;
+              }
+            }
+          } catch {
+            // Gracefully ignore
+          }
+        }),
+      );
+    }
+
+    return sessions;
   } else {
     console.info("No session cookie found.");
     return [];

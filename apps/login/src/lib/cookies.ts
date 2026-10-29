@@ -20,6 +20,8 @@ export type Cookie = {
   id: string;
   token: string;
   loginName: string;
+  displayName?: string;
+  email?: string;
   organization?: string;
   creationTs: string;
   expirationTs: string;
