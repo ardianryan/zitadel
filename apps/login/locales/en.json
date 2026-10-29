@@ -9,7 +9,10 @@
     "addAnother": "Add another account",
     "noResults": "No accounts found",
     "verified": "verified",
-    "expired": "expired"
+    "expired": "expired",
+    "backToPrev": "Back to Previous Page",
+    "backToApp": "Back to {app}",
+    "backToHome": "Back to Home"
   },
   "logout": {
     "title": "Sign Out",

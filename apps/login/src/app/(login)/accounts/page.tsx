@@ -1,9 +1,10 @@
+import { AccountsNavigation } from "@/components/accounts-navigation";
 import { DynamicTheme } from "@/components/dynamic-theme";
 import { SessionsList } from "@/components/sessions-list";
 import { Translated } from "@/components/translated";
 import { getAllSessions } from "@/lib/cookies";
 import { getServiceConfig } from "@/lib/service-url";
-import { getBrandingSettings, getDefaultOrg, listSessions, ServiceConfig } from "@/lib/zitadel";
+import { getAuthRequest, getBrandingSettings, getDefaultOrg, listSessions, ServiceConfig } from "@/lib/zitadel";
 import { UserPlusIcon } from "@heroicons/react/24/outline";
 import { create } from "@zitadel/client";
 import { Organization } from "@zitadel/proto/zitadel/org/v2/org_pb";
@@ -104,6 +105,27 @@ export default async function Page(props: { searchParams: Promise<Record<string 
     params.append("orgDomain", orgDomain);
   }
 
+  let returnUrl = _headers.get("referer") ?? undefined;
+  if (requestId && requestId.startsWith("oidc_")) {
+    try {
+      const authReq = await getAuthRequest({
+        serviceConfig,
+        authRequestId: requestId.replace("oidc_", ""),
+      });
+      if (authReq?.authRequest?.redirectUri) {
+        returnUrl = authReq.authRequest.redirectUri;
+      }
+    } catch {
+      // ignore
+    }
+  }
+
+  const homeParams = new URLSearchParams();
+  if (organization) {
+    homeParams.append("organization", organization);
+  }
+  const homeHref = homeParams.toString() ? `/loginname?${homeParams.toString()}` : "/loginname";
+
   return (
     <DynamicTheme branding={branding}>
       <div className="flex flex-col space-y-4">
@@ -128,6 +150,7 @@ export default async function Page(props: { searchParams: Promise<Record<string 
               </span>
             </div>
           </Link>
+          <AccountsNavigation returnUrl={returnUrl} homeUrl={homeHref} />
         </div>
       </div>
     </DynamicTheme>

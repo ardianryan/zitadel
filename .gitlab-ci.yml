@@ -74,3 +74,4 @@ docker-build:
   rules:
     - if: '$CI_COMMIT_BRANCH == "custom-ui" || $CI_COMMIT_BRANCH == "custom-login-ui"'
     - if: '$CI_PIPELINE_SOURCE == "web"'
+

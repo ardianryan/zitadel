@@ -9,7 +9,10 @@
     "addAnother": "Gunakan akun lain",
     "noResults": "Tidak ada akun ditemukan",
     "verified": "terverifikasi",
-    "expired": "kadaluarsa"
+    "expired": "kadaluarsa",
+    "backToPrev": "Kembali ke Halaman Sebelumnya",
+    "backToApp": "Kembali ke {app}",
+    "backToHome": "Kembali ke Beranda"
   },
   "logout": {
     "title": "Keluar Akun",
