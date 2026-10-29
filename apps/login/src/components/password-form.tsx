@@ -116,6 +116,26 @@ export function PasswordForm({
     return router.push("/password/set?" + params);
   }
 
+  const isSchoolDomain =
+    !loginName.includes("@") || loginName.toLowerCase().endsWith("@sman1gedeg.sch.id");
+
+  function handleForgotPassword() {
+    if (isSchoolDomain) {
+      const params = new URLSearchParams({
+        loginName,
+      });
+      if (organization) {
+        params.append("organization", organization);
+      }
+      if (requestId) {
+        params.append("requestId", requestId);
+      }
+      return router.push("/activation?" + params.toString());
+    }
+
+    return resetPasswordAndContinue();
+  }
+
   return (
     <>
       {samlData && <AutoSubmitForm url={samlData.url} fields={samlData.fields} />}
@@ -133,7 +153,7 @@ export function PasswordForm({
             <div className="mt-2 text-right">
               <button
                 className="text-xs font-semibold text-[#0F91FC] transition-colors hover:underline dark:text-[#38BDF8]"
-                onClick={() => resetPasswordAndContinue()}
+                onClick={() => handleForgotPassword()}
                 type="button"
                 disabled={loading}
                 data-testid="reset-button"
@@ -172,7 +192,7 @@ export function PasswordForm({
                     </p>
                   </div>
                   <div className="flex flex-wrap items-center gap-2 pt-1">
-                    {!loginSettings?.hidePasswordReset && (
+                    {!isSchoolDomain && !loginSettings?.hidePasswordReset && (
                       <button
                         type="button"
                         disabled={loading}
@@ -182,7 +202,19 @@ export function PasswordForm({
                         <Translated i18nKey="verify.helpActionReset" namespace="password" />
                       </button>
                     )}
-                    {helpLink && (
+                    {isSchoolDomain ? (
+                      <a
+                        href={helpLink || "https://sman1gedeg.sch.id"}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-amber-600 px-3.5 py-1.5 text-xs font-semibold text-white shadow-sm transition-colors hover:bg-amber-700 dark:bg-amber-600 dark:hover:bg-amber-500"
+                      >
+                        <span><Translated i18nKey="verify.schoolHelpAction" namespace="password" /></span>
+                        <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                        </svg>
+                      </a>
+                    ) : helpLink ? (
                       <a
                         href={helpLink}
                         target="_blank"
@@ -194,7 +226,7 @@ export function PasswordForm({
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                         </svg>
                       </a>
-                    )}
+                    ) : null}
                   </div>
                 </div>
               </div>

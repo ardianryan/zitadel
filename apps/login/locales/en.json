@@ -30,6 +30,17 @@
       "signInAgain": "Sign In Again"
     }
   },
+  "activation": {
+    "title": "SMAGE ID Account Activation",
+    "badge": "ACCOUNT STATUS",
+    "subtitle": "Registered Account at SMAN 1 Gedeg",
+    "notActiveTitle": "Account Not Yet Activated",
+    "notActiveDesc": "Your SMAGE ID account is registered in the SMAN 1 Gedeg system, but has not yet been activated or does not have a personal password set.",
+    "emailNotice": "Because your account uses an internal school email address (@sman1gedeg.sch.id), verification codes or OTPs are not delivered to personal inboxes.",
+    "instruction": "Please activate your account, set a new password, or request access assistance via the official SMAN 1 Gedeg Help Service below.",
+    "openHelp": "School Activation & Help",
+    "backToLogin": "Back to Sign In"
+  },
   "loginname": {
     "title": "Welcome back!",
     "description": "Enter your login details.",
@@ -81,6 +92,7 @@
       "helpUnlockDesc": "If your account is locked due to incorrect password attempts or other access issues, you can restore access by resetting your password or visiting the official help service.",
       "helpActionReset": "Recover / Reset Password",
       "openHelp": "School Help Service",
+      "schoolHelpAction": "School Help & Activation",
       "submit": "Continue",
       "labels": {
         "password": "Password"

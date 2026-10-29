@@ -30,6 +30,17 @@
       "signInAgain": "Masuk Kembali"
     }
   },
+  "activation": {
+    "title": "Aktivasi Akun SMAGE ID",
+    "badge": "STATUS AKUN",
+    "subtitle": "Akun Terdaftar di Sistem SMAN 1 Gedeg",
+    "notActiveTitle": "Akun Belum Diaktifkan",
+    "notActiveDesc": "Akun SMAGE ID Anda telah terdaftar di sistem SMAN 1 Gedeg, namun saat ini belum diaktivasi atau belum memiliki kata sandi mandiri.",
+    "emailNotice": "Karena akun menggunakan alamat email internal sekolah (@sman1gedeg.sch.id), kode verifikasi atau OTP tidak dikirimkan ke kotak masuk email pribadi.",
+    "instruction": "Silakan lakukan aktivasi akun, pengaturan kata sandi baru, atau permohonan bantuan akses melalui Layanan Resmi SMAN 1 Gedeg di bawah ini.",
+    "openHelp": "Aktivasi & Bantuan Sekolah",
+    "backToLogin": "Kembali ke Halaman Masuk"
+  },
   "loginname": {
     "title": "Selamat Datang!",
     "description": "Masukkan data masuk Anda.",
@@ -81,6 +92,7 @@
       "helpUnlockDesc": "Jika akun Anda terkunci karena salah memasukkan kata sandi atau kendala akses lainnya, Anda dapat memulihkannya dengan melakukan reset kata sandi atau membuka layanan bantuan resmi.",
       "helpActionReset": "Pulihkan / Reset Kata Sandi",
       "openHelp": "Layanan Bantuan Sekolah",
+      "schoolHelpAction": "Aktivasi & Bantuan Sekolah",
       "submit": "Lanjutkan",
       "labels": {
         "password": "Kata Sandi"

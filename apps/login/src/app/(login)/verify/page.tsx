@@ -8,10 +8,11 @@ import { getServiceConfig } from "@/lib/service-url";
 import { loadMostRecentSession } from "@/lib/session";
 import { getBrandingSettings, getLoginSettings, getUserByID, searchUsers } from "@/lib/zitadel";
 import { LoginSettings } from "@zitadel/proto/zitadel/settings/v2/login_settings_pb";
-import { HumanUser, User } from "@zitadel/proto/zitadel/user/v2/user_pb";
+import { HumanUser, User, UserState } from "@zitadel/proto/zitadel/user/v2/user_pb";
 import { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { headers } from "next/headers";
+import { redirect } from "next/navigation";
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("verify");
@@ -84,6 +85,26 @@ export default async function Page(props: { searchParams: Promise<any> }) {
       // Prevent enumeration by pretending we found a user
       id = UNKNOWN_USER_ID;
     }
+  }
+
+  const resolvedLoginName = loginName ?? sessionFactors?.factors?.user?.loginName ?? user?.preferredLoginName;
+  const isSchoolDomain =
+    (resolvedLoginName &&
+      (resolvedLoginName.toLowerCase().endsWith("@sman1gedeg.sch.id") || !resolvedLoginName.includes("@"))) ||
+    (human?.email?.email && human.email.email.toLowerCase().endsWith("@sman1gedeg.sch.id"));
+
+  if (isSchoolDomain && (!code || user?.state === UserState.INITIAL || user?.state === UserState.INACTIVE)) {
+    const actParams = new URLSearchParams();
+    if (resolvedLoginName) {
+      actParams.set("loginName", resolvedLoginName);
+    }
+    if (organization) {
+      actParams.set("organization", organization);
+    }
+    if (requestId) {
+      actParams.set("requestId", requestId);
+    }
+    redirect(`/activation?${actParams.toString()}`);
   }
 
   const params = new URLSearchParams({

@@ -314,16 +314,32 @@ export async function sendLoginname(command: SendLoginnameCommand) {
       ? command.loginName
       : (session?.factors?.user?.loginName ?? user.preferredLoginName);
 
-    // TODO: check if handling of userstate INITIAL is needed
-    if (user.state === UserState.INITIAL) {
+    // Resolve organization from command or session
+    let organization = command.organization ?? session?.factors?.user?.organizationId ?? user.details?.resourceOwner;
+
+    // Detect if this is an internal school email or account without a public mailbox
+    const isSchoolEmail =
+      command.loginName.toLowerCase().endsWith("@sman1gedeg.sch.id") ||
+      (user.preferredLoginName && user.preferredLoginName.toLowerCase().endsWith("@sman1gedeg.sch.id")) ||
+      (humanUser?.email?.email && humanUser.email.email.toLowerCase().endsWith("@sman1gedeg.sch.id")) ||
+      (!command.loginName.includes("@") && !user.preferredLoginName.includes("@"));
+
+    // Check if user is INITIAL or INACTIVE
+    if (user.state === UserState.INITIAL || user.state === UserState.INACTIVE) {
+      if (isSchoolEmail) {
+        const params = new URLSearchParams({
+          loginName: redirectLoginName,
+        });
+        if (organization) params.set("organization", organization);
+        if (command.requestId) params.set("requestId", command.requestId);
+        return { redirect: "/activation?" + params.toString() };
+      }
+
       if (ignoreUnknownUsernames) {
         return preventUserEnumeration(command.organization);
       }
       return { error: t("errors.initialUserNotSupported") };
     }
-
-    // Resolve organization from command or session
-    let organization = command.organization ?? session?.factors?.user?.organizationId ?? user.details?.resourceOwner;
 
     if (ignoreUnknownUsernames) {
       organization = command.organization;
@@ -358,6 +374,17 @@ export async function sendLoginname(command: SendLoginnameCommand) {
 
     // always resend invite or setup email if user has no primary auth method set
     if (!hasPrimaryMethod) {
+      // If the user has a school email without public inbox, do not attempt to send dead OTP codes.
+      // Direct them straight to the official school activation service!
+      if (isSchoolEmail) {
+        const params = new URLSearchParams({
+          loginName: redirectLoginName,
+        });
+        if (organization) params.set("organization", organization);
+        if (command.requestId) params.set("requestId", command.requestId);
+        return { redirect: "/activation?" + params.toString() };
+      }
+
       logger.debug("humanUser.email?.isVerified", {
         isVerified: humanUser?.email?.isVerified,
       });
