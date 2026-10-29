@@ -12,14 +12,22 @@
     "expired": "kadaluarsa"
   },
   "logout": {
-    "title": "Keluar",
-    "description": "Klik akun untuk mengakhiri sesi",
-    "noResults": "Tidak ada akun ditemukan",
-    "clear": "Akhiri Sesi",
+    "title": "Keluar Akun",
+    "description": "Pilih akun yang ingin Anda keluarkan dari sesi browser ini",
+    "noResults": "Tidak ada sesi aktif ditemukan",
+    "clear": "Keluarkan",
+    "clearAll": "Keluar dari Semua Akun",
+    "cancel": "Batal & Kembali ke Aplikasi",
     "verifiedAt": "Terakhir aktif: {time}",
+    "remainingAccounts": "Masih ada {count} akun lain yang aktif di perangkat ini.",
+    "switchAccount": "Pilih Akun Lain",
     "success": {
-      "title": "Berhasil keluar",
-      "description": "Anda telah berhasil keluar dari sesi."
+      "title": "Berhasil Keluar",
+      "description": "Sesi akun Anda telah berhasil diakhiri.",
+      "backToApp": "Kembali ke {app}",
+      "backToPrev": "Kembali ke Halaman Sebelumnya",
+      "backToHome": "Kembali ke Halaman Utama",
+      "signInAgain": "Masuk Kembali"
     }
   },
   "loginname": {

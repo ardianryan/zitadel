@@ -1,6 +1,7 @@
 import { DynamicTheme } from "@/components/dynamic-theme";
 import { SessionsClearList } from "@/components/sessions-clear-list";
 import { Translated } from "@/components/translated";
+import { isSafeRedirectUri } from "@/lib/client-utils";
 import { getAllSessionCookieIds } from "@/lib/cookies";
 import { getServiceConfig } from "@/lib/service-url";
 import { getBrandingSettings, getDefaultOrg, listSessions, ServiceConfig } from "@/lib/zitadel";
@@ -32,11 +33,13 @@ export default async function Page(props: { searchParams: Promise<Record<string 
 
   const organization = searchParams?.organization;
   const logoutToken = searchParams?.logout_token;
+  const queryRedirectUri = searchParams?.post_logout_redirect_uri || searchParams?.redirect_uri;
 
   const _headers = await headers();
   const { serviceConfig } = getServiceConfig(_headers);
 
-  let postLogoutRedirectUri, logoutHint;
+  let postLogoutRedirectUri = queryRedirectUri;
+  let logoutHint;
   if (logoutToken) {
     try {
       const payload = await verifyJwt<{ post_logout_redirect_uri?: string; logoutHint?: string }>(
@@ -60,6 +63,19 @@ export default async function Page(props: { searchParams: Promise<Record<string 
     }
   }
 
+  const rawReferer = _headers.get("referer");
+  let referer: string | undefined = undefined;
+  if (rawReferer && isSafeRedirectUri(rawReferer)) {
+    try {
+      const refUrl = new URL(rawReferer);
+      if (!refUrl.pathname.includes("/logout")) {
+        referer = rawReferer;
+      }
+    } catch {
+      // not a valid URL
+    }
+  }
+
   let defaultOrganization;
   if (!organization) {
     const org: Organization | null = await getDefaultOrg({ serviceConfig });
@@ -71,12 +87,6 @@ export default async function Page(props: { searchParams: Promise<Record<string 
   let sessions = await loadSessions({ serviceConfig });
 
   const branding = await getBrandingSettings({ serviceConfig, organization: organization ?? defaultOrganization });
-
-  const params = new URLSearchParams();
-
-  if (organization) {
-    params.append("organization", organization);
-  }
 
   return (
     <DynamicTheme branding={branding}>
@@ -95,6 +105,7 @@ export default async function Page(props: { searchParams: Promise<Record<string 
             sessions={sessions}
             logoutHint={logoutHint}
             postLogoutRedirectUri={postLogoutRedirectUri}
+            referer={referer}
             organization={organization ?? defaultOrganization}
           />
         </div>

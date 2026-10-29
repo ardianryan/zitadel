@@ -1091,4 +1091,63 @@ describe("handleOIDCFlowInitiation — idp scope (urn:zitadel:iam:org:idp:id)", 
       }),
     );
   });
+
+  describe("Google-like multi-account chooser behavior", () => {
+    test("should redirect to /accounts when user has multiple live sessions (default prompt)", async () => {
+      mockGetAuthRequest.mockResolvedValue({
+        authRequest: {
+          id: "abc123",
+          uiLocales: [],
+          scope: [],
+          prompt: [],
+          loginHint: undefined,
+        },
+      });
+
+      const session1 = { id: "s1", factors: { user: { id: "u1", loginName: "user1@example.com" } } };
+      const session2 = { id: "s2", factors: { user: { id: "u2", loginName: "user2@example.com" } } };
+
+      const res = await handleOIDCFlowInitiation(
+        makeBaseParams({
+          sessions: [session1, session2] as any,
+          sessionCookies: [
+            makeCookie("s1", "user1@example.com"),
+            makeCookie("s2", "user2@example.com"),
+          ],
+        }),
+      );
+
+      const location = res.headers.get("location") ?? "";
+      expect(location).toContain("/accounts");
+      expect(location).toContain("requestId=oidc_abc123");
+    });
+
+    test("should redirect to /accounts when user has multiple account cookies (default prompt)", async () => {
+      mockGetAuthRequest.mockResolvedValue({
+        authRequest: {
+          id: "abc123",
+          uiLocales: [],
+          scope: [],
+          prompt: [],
+          loginHint: undefined,
+        },
+      });
+
+      const session1 = { id: "s1", factors: { user: { id: "u1", loginName: "user1@example.com" } } };
+
+      const res = await handleOIDCFlowInitiation(
+        makeBaseParams({
+          sessions: [session1] as any,
+          sessionCookies: [
+            makeCookie("s1", "user1@example.com"),
+            makeCookie("s2", "user2@example.com"),
+          ],
+        }),
+      );
+
+      const location = res.headers.get("location") ?? "";
+      expect(location).toContain("/accounts");
+      expect(location).toContain("requestId=oidc_abc123");
+    });
+  });
 });

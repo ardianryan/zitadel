@@ -465,6 +465,21 @@ export async function handleOIDCFlowInitiation(params: FlowInitiationParams): Pr
       setCSPHeaders(callbackResponse, serviceConfig, securitySettings);
       return callbackResponse;
     } else {
+      const hasSpecificUserHint = Boolean(authRequest.loginHint || authRequest.hintUserId);
+      const matchingCookieAccounts = sessionCookies.filter(
+        (c) => !!c.loginName && (!organization || c.organization === organization),
+      );
+      const hasMultipleAccounts = eligibleSessions.length > 1 || matchingCookieAccounts.length > 1;
+
+      if (!hasSpecificUserHint && hasMultipleAccounts) {
+        return gotoAccounts({
+          request,
+          requestId,
+          organization,
+          orgDomain,
+        });
+      }
+
       let selectedSession = await findValidSession({ serviceConfig, sessions, authRequest, organization });
 
       if (!selectedSession || !selectedSession.id) {
@@ -613,6 +628,15 @@ export async function handleSAMLFlowInitiation(params: FlowInitiationParams): Pr
     const loginNameUrl = constructUrl(request, "/loginname");
     loginNameUrl.searchParams.set("requestId", requestId);
     return NextResponse.redirect(loginNameUrl);
+  }
+
+  // If there are multiple sessions in browser, let user choose account like Google
+  const accountCookieCount = sessionCookies.filter((c) => !!c.loginName).length;
+  if (sessions.length > 1 || accountCookieCount > 1) {
+    return gotoAccounts({
+      request,
+      requestId,
+    });
   }
 
   // Try to find a valid session

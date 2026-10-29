@@ -12,14 +12,22 @@
     "expired": "expired"
   },
   "logout": {
-    "title": "Logout",
-    "description": "Click an account to end the session",
-    "noResults": "No accounts found",
-    "clear": "End Session",
+    "title": "Sign Out",
+    "description": "Choose an account to sign out from this browser session",
+    "noResults": "No active sessions found",
+    "clear": "Sign Out",
+    "clearAll": "Sign out of all accounts",
+    "cancel": "Cancel & Back to App",
     "verifiedAt": "Last active: {time}",
+    "remainingAccounts": "{count} other account(s) are still signed in on this device.",
+    "switchAccount": "Choose Another Account",
     "success": {
-      "title": "Logout successful",
-      "description": "You have successfully logged out."
+      "title": "Signed Out Successfully",
+      "description": "Your account session has been ended.",
+      "backToApp": "Back to {app}",
+      "backToPrev": "Back to Previous Page",
+      "backToHome": "Back to Home Page",
+      "signInAgain": "Sign In Again"
     }
   },
   "loginname": {
