@@ -13,8 +13,9 @@ updates:
     - "/console"
     - "/e2e"
   schedule:
-    interval: weekly
-    time: "02:00"
+    interval: "cron"
+    cron: "0 7 28 * *"
+    timezone: "Asia/Jakarta"
   labels:
    - "javascript"
    - "dependencies"
@@ -26,7 +27,9 @@ updates:
   directory: '/login'
   open-pull-requests-limit: 3
   schedule:
-    interval: daily
+    interval: "cron"
+    cron: "0 7 28 * *"
+    timezone: "Asia/Jakarta"
   groups:
     prod:
       dependency-type: production
@@ -46,8 +49,9 @@ updates:
         - "patch"
   directory: "/"
   schedule:
-    interval: weekly
-    time: "02:00"
+    interval: "cron"
+    cron: "0 7 28 * *"
+    timezone: "Asia/Jakarta"
   labels:
    - "go"
    - "dependencies"
@@ -66,8 +70,9 @@ updates:
         - "patch"
   directory: "/build"
   schedule:
-    interval: "weekly"
-    time: "02:00"
+    interval: "cron"
+    cron: "0 7 28 * *"
+    timezone: "Asia/Jakarta"
   open-pull-requests-limit: 10
   commit-message:
     prefix: chore
@@ -80,8 +85,9 @@ updates:
         - "*"
   directory: "/"
   schedule:
-    interval: weekly
-    time: "02:00"
+    interval: "cron"
+    cron: "0 7 28 * *"
+    timezone: "Asia/Jakarta"
   open-pull-requests-limit: 10
   commit-message:
     prefix: chore
@@ -90,8 +96,9 @@ updates:
   directory: '/apps/docs'
   open-pull-requests-limit: 10
   schedule:
-    interval: weekly
-    time: "02:00"
+    interval: "cron"
+    cron: "0 7 28 * *"
+    timezone: "Asia/Jakarta"
   groups:
     prod:
       dependency-type: production
