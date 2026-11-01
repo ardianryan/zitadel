@@ -1,3 +1,4 @@
+import { CollapsibleUsernameSection } from "@/components/collapsible-username-section";
 import { DynamicTheme } from "@/components/dynamic-theme";
 import { SignInWithIdp } from "@/components/sign-in-with-idp";
 import { UsernameForm } from "@/components/username-form";
@@ -147,18 +148,26 @@ export default async function Page(props: { searchParams: Promise<Record<string 
           </div>
         )}
 
-        {/* Divider if both IDP and Local Auth exist */}
-        {hasIdp && hasLocal && (
-          <div className="relative flex items-center justify-center py-2 select-none">
-            <div className="w-full border-t border-slate-200 dark:border-slate-700"></div>
-            <span className="absolute bg-white px-3 text-[11px] font-semibold text-slate-400 dark:bg-slate-900 dark:text-slate-500">
-              {tEdu("orSignInWithEmail")}
-            </span>
-          </div>
-        )}
-
-        {/* Local Username Form */}
-        {hasLocal && (
+        {/* Local Username Form: Collapsible when IDP exists to prioritize SSO, or directly visible if only local auth is enabled */}
+        {hasIdp && hasLocal ? (
+          <CollapsibleUsernameSection
+            defaultOpen={Boolean(loginName || submit)}
+            toggleText={tEdu("orSignInWithEmail")}
+          >
+            <UsernameForm
+              loginName={loginName}
+              requestId={requestId}
+              organization={organization}
+              defaultOrganization={defaultOrganization}
+              loginSettings={loginSettings}
+              suffix={orgDomain}
+              hideSuffix={branding?.hideLoginNameSuffix}
+              submit={submit}
+              allowRegister={!!loginSettings?.allowRegister}
+              helpLink={helpLink}
+            />
+          </CollapsibleUsernameSection>
+        ) : hasLocal ? (
           <UsernameForm
             loginName={loginName}
             requestId={requestId}
@@ -171,7 +180,7 @@ export default async function Page(props: { searchParams: Promise<Record<string 
             allowRegister={!!loginSettings?.allowRegister}
             helpLink={helpLink}
           />
-        )}
+        ) : null}
       </div>
     </DynamicTheme>
   );
