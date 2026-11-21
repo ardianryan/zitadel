@@ -546,14 +546,6 @@ export async function sendLoginname(command: SendLoginnameCommand) {
         return { redirect: "/passkey?" + passkeyParams };
       }
 
-      if (methods.authMethodTypes.includes(AuthenticationMethodType.IDP)) {
-        const resp = await redirectUserToIDP(userId, organization);
-        if (resp) {
-          return resp;
-        }
-        // no single identity provider could be resolved, continue with the remaining methods
-      }
-
       if (
         methods.authMethodTypes.includes(AuthenticationMethodType.PASSWORD) &&
         userLoginSettings?.allowLocalAuthentication
@@ -577,6 +569,10 @@ export async function sendLoginname(command: SendLoginnameCommand) {
       }
 
       if (methods.authMethodTypes.includes(AuthenticationMethodType.IDP)) {
+        const resp = await redirectUserToIDP(userId, organization);
+        if (resp) {
+          return resp;
+        }
         return redirectToIDPSelection(organization);
       }
 

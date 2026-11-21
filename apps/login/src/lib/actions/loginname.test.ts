@@ -575,7 +575,22 @@ describe("sendLoginname", () => {
         });
       });
 
-      test("should redirect to IDP when no passkey but IDP available", async () => {
+      test("should prefer password over IDP when local authentication is allowed", async () => {
+        mockListAuthenticationMethodTypes.mockResolvedValue({
+          authMethodTypes: [AuthenticationMethodType.PASSWORD, AuthenticationMethodType.IDP],
+        });
+
+        const result = await sendLoginname({
+          loginName: "user@example.com",
+        });
+
+        expect(mockStartIdentityProviderFlow).not.toHaveBeenCalled();
+        expect(result).toHaveProperty("redirect");
+        expect((result as any).redirect).toMatch(/^\/password\?/);
+      });
+
+      test("should redirect to IDP when password is present but local authentication is not allowed", async () => {
+        mockGetLoginSettings.mockResolvedValue({ allowLocalAuthentication: false });
         mockListAuthenticationMethodTypes.mockResolvedValue({
           authMethodTypes: [AuthenticationMethodType.PASSWORD, AuthenticationMethodType.IDP],
         });
@@ -1478,6 +1493,69 @@ describe("sendLoginname", () => {
       });
 
       expect(result).toEqual({ error: "errors.initialUserNotSupported" });
+    });
+
+    test("should redirect to /activation when user with sman1gedeg.sch.id email is in INITIAL state", async () => {
+      const mockUser = {
+        userId: "user123",
+        preferredLoginName: "siswa@sman1gedeg.sch.id",
+        details: { resourceOwner: "org123" },
+        type: { case: "human", value: { email: { email: "siswa@sman1gedeg.sch.id" } } },
+        state: UserState.INITIAL,
+      };
+
+      const mockSession = {
+        factors: {
+          user: {
+            id: "user123",
+            loginName: "siswa@sman1gedeg.sch.id",
+            organizationId: "org123",
+          },
+        },
+      };
+
+      mockGetLoginSettings.mockResolvedValue({ allowLocalAuthentication: true });
+      mockSearchUsers.mockResolvedValue({ result: [mockUser] });
+      mockCreate.mockReturnValue({});
+      mockCreateSessionAndUpdateCookie.mockResolvedValue({ session: mockSession, sessionCookie: {} });
+
+      const result = await sendLoginname({
+        loginName: "siswa@sman1gedeg.sch.id",
+      });
+
+      expect(result).toEqual({ redirect: "/activation?loginName=siswa%40sman1gedeg.sch.id&organization=org123" });
+    });
+
+    test("should redirect to /activation when user with sman1gedeg.sch.id email has no primary authentication method", async () => {
+      const mockUser = {
+        userId: "user123",
+        preferredLoginName: "siswa@sman1gedeg.sch.id",
+        details: { resourceOwner: "org123" },
+        type: { case: "human", value: { email: { email: "siswa@sman1gedeg.sch.id", isVerified: false } } },
+        state: UserState.ACTIVE,
+      };
+
+      const mockSession = {
+        factors: {
+          user: {
+            id: "user123",
+            loginName: "siswa@sman1gedeg.sch.id",
+            organizationId: "org123",
+          },
+        },
+      };
+
+      mockGetLoginSettings.mockResolvedValue({ allowLocalAuthentication: true });
+      mockSearchUsers.mockResolvedValue({ result: [mockUser] });
+      mockCreate.mockReturnValue({});
+      mockCreateSessionAndUpdateCookie.mockResolvedValue({ session: mockSession, sessionCookie: {} });
+      mockListAuthenticationMethodTypes.mockResolvedValue({ authMethodTypes: [] });
+
+      const result = await sendLoginname({
+        loginName: "siswa@sman1gedeg.sch.id",
+      });
+
+      expect(result).toEqual({ redirect: "/activation?loginName=siswa%40sman1gedeg.sch.id&organization=org123" });
     });
 
     test("should handle organization parameter in all redirects", async () => {
