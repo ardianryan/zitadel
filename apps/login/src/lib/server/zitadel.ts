@@ -932,6 +932,42 @@ export async function getOrgsByDomain({ serviceConfig, domain }: WithServiceConf
   );
 }
 
+/**
+ * Fetches an organization by ID using instance-scoped caching.
+ */
+export async function getOrgById({
+  serviceConfig,
+  orgId,
+}: WithServiceConfig<{ orgId: string }>): Promise<Organization | null> {
+  const fetcher = async () => {
+    const orgService: Client<typeof OrganizationService> = await createServiceForHost(OrganizationService, serviceConfig);
+
+    return orgService
+      .listOrganizations(
+        {
+          queries: [
+            {
+              query: {
+                case: "idQuery",
+                value: { id: orgId },
+              },
+            },
+          ],
+        },
+        {},
+      )
+      .then((resp) => (resp?.result && resp.result[0] ? resp.result[0] : null));
+  };
+
+  return useCache
+    ? freshCache(
+        instanceCacheKey(serviceConfig, `getOrgById-${orgId}`),
+        fetcher,
+        getTTLForKey("getOrgById", defaultCacheTTL),
+      )
+    : fetcher();
+}
+
 // RedirectURLs.login_hint is validated with max_len 200 by the API.
 const MAX_LOGIN_HINT_LENGTH = 200;
 
