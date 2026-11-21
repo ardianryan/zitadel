@@ -27,7 +27,7 @@ func TestBackfillUniqueConstraintOwnersStmts(t *testing.T) {
 		extra      []string
 	}{
 		{"01_usernames_org_scoped.sql", "usernames", "u.username || u.resource_owner", projection.UserTable, []string{"'org:' || u.resource_owner"}},
-		{"02_usernames.sql", "usernames", "lower(u.username)", projection.UserTable, []string{"'org:' || u.resource_owner", "organization_scoped_usernames", "user_login_must_be_domain"}},
+		{"02_usernames.sql", "usernames", "lower(u.username)", projection.UserTable, []string{"'org:' || u.resource_owner", "user_login_must_be_domain"}},
 		{"03_external_idps.sql", "external_idps", "l.idp_id || l.external_user_id", projection.IDPUserLinkTable, []string{"'idp:' || l.idp_id"}},
 		{"04_org_name.sql", "org_name", "o.name", projection.OrgProjectionTable, nil},
 		{"05_org_domain.sql", "org_domain", "d.domain", projection.OrgDomainTable, []string{"d.is_verified"}},
@@ -41,7 +41,6 @@ func TestBackfillUniqueConstraintOwnersStmts(t *testing.T) {
 		{"13_member_org.sql", "member", "m.org_id || ':' || m.user_id", projection.OrgMemberProjectionTable, []string{"m.user_resource_owner"}},
 		{"14_member_project.sql", "member", "m.project_id || ':' || m.user_id", projection.ProjectMemberProjectionTable, []string{"m.user_resource_owner"}},
 		{"15_member_instance.sql", "member", "m.id || ':' || m.user_id", projection.InstanceMemberProjectionTable, []string{"m.user_resource_owner"}},
-		{"16_group_name.sql", "group_name", "g.name || ':' || g.resource_owner", projection.GroupProjectionTable, nil},
 		{"17_action_names.sql", "action_names", "a.name || ':' || a.resource_owner", projection.ActionTable, nil},
 		{"18_idp_config_names.sql", "idp_config_names", "i.name || i.resource_owner", projection.IDPTable, []string{"'idp:' || i.id"}},
 		{"19_idp_config_names_templates.sql", "idp_config_names", "t.name || t.resource_owner", projection.IDPTemplateTable, []string{"'idp:' || t.id"}},
@@ -132,9 +131,9 @@ func TestBackfillUniqueConstraintOwners_CheckAndFinalize(t *testing.T) {
 			wantFinalized: true,
 		},
 		{
-			name:          "version changed keeps finalized true",
+			name:          "version changed after finalize skips",
 			lastRun:       map[string]interface{}{"version": "v1.0.0", "finalized": true},
-			wantRun:       true,
+			wantRun:       false,
 			wantFinalized: true,
 		},
 	}
@@ -164,9 +163,7 @@ func TestBackfillUniqueConstraintOwners_SequentialVersionChanges(t *testing.T) {
 
 	lastRun = map[string]interface{}{"version": mig.Version, "finalized": mig.Finalized}
 	mig = &BackfillUniqueConstraintOwners{Version: "v3.0.0"}
-	require.True(t, mig.Check(lastRun))
-	mig.finalizeAfterSuccess()
-	assert.True(t, mig.Finalized)
+	assert.False(t, mig.Check(lastRun), "later version must skip after previous run finalized")
 }
 
 func TestBackfillUniqueConstraintOwners_ForceFinalizeRestart(t *testing.T) {
@@ -216,4 +213,51 @@ func TestBackfillUniqueConstraintOwnersJSONOmitsForceFinalize(t *testing.T) {
 	assert.NotContains(t, payload, "lastVersion")
 	assert.NotContains(t, payload, "lastFinalized")
 	assert.False(t, strings.Contains(string(data), "v1.0.0"))
+}
+
+func TestUnmatchedOwnerCounts(t *testing.T) {
+	tests := []struct {
+		name      string
+		byType    map[string]int64
+		wantTotal int64
+		wantWarn  bool
+	}{
+		{
+			name:      "empty",
+			byType:    map[string]int64{},
+			wantTotal: 0,
+			wantWarn:  false,
+		},
+		{
+			name:      "project roles only",
+			byType:    map[string]int64{"project_role": 12, "appname": 3},
+			wantTotal: 15,
+			wantWarn:  false,
+		},
+		{
+			name:      "unmatched usernames warn",
+			byType:    map[string]int64{"usernames": 2, "project_role": 1},
+			wantTotal: 3,
+			wantWarn:  true,
+		},
+		{
+			name:      "unmatched org name warn",
+			byType:    map[string]int64{"org_name": 1},
+			wantTotal: 1,
+			wantWarn:  true,
+		},
+		{
+			name:      "zero usernames does not warn",
+			byType:    map[string]int64{"usernames": 0, "org_name": 0, "appname": 4},
+			wantTotal: 4,
+			wantWarn:  false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gotTotal, gotWarn := unmatchedOwnerCounts(tt.byType)
+			assert.Equal(t, tt.wantTotal, gotTotal)
+			assert.Equal(t, tt.wantWarn, gotWarn)
+		})
+	}
 }

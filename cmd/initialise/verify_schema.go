@@ -15,26 +15,18 @@ import (
 	es_v3 "github.com/zitadel/zitadel/internal/eventstore/v3"
 )
 
-func newSchema() *cobra.Command {
+func newZitadel() *cobra.Command {
 	return &cobra.Command{
-		Use:     "schema",
-		Aliases: []string{"zitadel"},
-		Short:   "bootstrap the ZITADEL database schema without admin/superuser privileges",
-		Long: `Bootstrap the ZITADEL database schema.
-
-Creates all required schemas (eventstore, projections, system) and base tables
-using the service user credentials. No admin/superuser privileges are required.
-
-Use this command when you have provisioned the database user and database
-yourself (e.g. on a managed PostgreSQL service) and want to skip the
-admin-credential requirement of the full 'zitadel init' command.
+		Use:   "zitadel",
+		Short: "initialize ZITADEL internals",
+		Long: `initialize ZITADEL internals.
 
 Prerequisites:
-- PostgreSQL user exists and has ownership of the target database
+- postgreSQL with user and database
 `,
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
 			defer func() {
-				logging.OnError(cmd.Context(), err).Error("zitadel init schema command failed")
+				logging.OnError(cmd.Context(), err).Error("zitadel verify zitadel command failed")
 			}()
 			config, shutdown, err := NewConfig(cmd, viper.GetViper())
 			if err != nil {

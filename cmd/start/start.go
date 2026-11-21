@@ -26,9 +26,7 @@ import (
 	"golang.org/x/net/http2/h2c"
 	"golang.org/x/text/language"
 
-	new_domain "github.com/zitadel/zitadel/backend/v3/domain"
 	"github.com/zitadel/zitadel/backend/v3/instrumentation/logging"
-	v3_postgres "github.com/zitadel/zitadel/backend/v3/storage/database/dialect/postgres"
 	"github.com/zitadel/zitadel/cmd/build"
 	"github.com/zitadel/zitadel/cmd/encryption"
 	"github.com/zitadel/zitadel/cmd/key"
@@ -48,7 +46,6 @@ import (
 	authorization_v2beta "github.com/zitadel/zitadel/internal/api/grpc/authorization/v2beta"
 	feature_v2 "github.com/zitadel/zitadel/internal/api/grpc/feature/v2"
 	feature_v2beta "github.com/zitadel/zitadel/internal/api/grpc/feature/v2beta"
-	group_v2 "github.com/zitadel/zitadel/internal/api/grpc/group/v2"
 	idp_v2 "github.com/zitadel/zitadel/internal/api/grpc/idp/v2"
 	instance_v2 "github.com/zitadel/zitadel/internal/api/grpc/instance/v2"
 	instance_v2beta "github.com/zitadel/zitadel/internal/api/grpc/instance/v2beta"
@@ -184,7 +181,6 @@ func startZitadel(ctx context.Context, config *Config, masterKey string, server 
 		return fmt.Errorf("cannot start DB client for queries: %w", err)
 	}
 	database.RegisterPoolMetrics(ctx, dbClient.Pool)
-	new_domain.SetPool(v3_postgres.PGxPool(dbClient.Pool))
 
 	keyStorage, err := cryptoDB.NewKeyStorage(dbClient, masterKey)
 	if err != nil {
@@ -209,16 +205,7 @@ func startZitadel(ctx context.Context, config *Config, masterKey string, server 
 		MaxRetries: config.Eventstore.MaxRetries,
 	}))
 
-	new_domain.SetLegacyEventstore(eventstoreClient)
-	new_domain.SetSystemConfig(config.SystemDefaults)
-	new_domain.SetIDPEncryptionAlgorithm(keys.IDPConfig)
-	new_domain.SetMFAEncryptionAlgorithm(keys.OTP)
-	new_domain.SetOTPSMSSecretGeneratorConfig(config.DefaultInstance.SecretGenerators.OTPSMS)
-	new_domain.SetOTPEmailSecretGeneratorConfig(config.DefaultInstance.SecretGenerators.OTPEmail)
-
 	sessionTokenVerifier := internal_authz.SessionTokenVerifier(keys.OIDC)
-	sessionTokenDecryptor := internal_authz.SessionTokenDecryptor(keys.OIDC)
-	new_domain.SetSessionTokenDecryptor(sessionTokenDecryptor)
 	cacheConnectors, err := connector.StartConnectors(config.Caches, dbClient)
 	if err != nil {
 		return fmt.Errorf("unable to start caches: %w", err)
@@ -272,8 +259,6 @@ func startZitadel(ctx context.Context, config *Config, masterKey string, server 
 		DisplayName:    config.WebAuthNName,
 		ExternalSecure: config.ExternalSecure,
 	}
-
-	new_domain.SetWebAuthNConfig(webAuthNConfig)
 
 	httpClient := config.HTTPClient.NewClient()
 
@@ -523,16 +508,16 @@ func startAPIs(
 		return nil, fmt.Errorf("error starting admin repo: %w", err)
 	}
 
-	if err := apis.RegisterServer(ctx, system.CreateServer(commands, queries, config.Database.DatabaseName(), config.DefaultInstance, config.ExternalDomain), tlsConfig); err != nil {
+	if err := apis.RegisterServer(ctx, system.CreateServer(config.SystemDefaults, commands, queries, config.Database.DatabaseName(), config.DefaultInstance, config.ExternalDomain), tlsConfig); err != nil {
 		return nil, err
 	}
-	if err := apis.RegisterService(ctx, instance_v2beta.CreateServer(commands, queries, config.Database.DatabaseName(), config.DefaultInstance, config.ExternalDomain)); err != nil {
+	if err := apis.RegisterService(ctx, instance_v2beta.CreateServer(config.SystemDefaults, commands, queries, config.Database.DatabaseName(), config.DefaultInstance, config.ExternalDomain)); err != nil {
 		return nil, err
 	}
-	if err := apis.RegisterService(ctx, instance_v2.CreateServer(commands, queries, config.DefaultInstance, config.ExternalDomain, permissionCheck)); err != nil {
+	if err := apis.RegisterService(ctx, instance_v2.CreateServer(config.SystemDefaults, commands, queries, config.DefaultInstance, config.ExternalDomain, permissionCheck)); err != nil {
 		return nil, err
 	}
-	if err := apis.RegisterServer(ctx, admin.CreateServer(config.Database.DatabaseName(), commands, queries, keys.User, config.AuditLogRetention), tlsConfig); err != nil {
+	if err := apis.RegisterServer(ctx, admin.CreateServer(config.SystemDefaults, config.Database.DatabaseName(), commands, queries, keys.User, config.AuditLogRetention), tlsConfig); err != nil {
 		return nil, err
 	}
 	if err := apis.RegisterServer(ctx, management.CreateServer(commands, queries, config.SystemDefaults, keys.User), tlsConfig); err != nil {
@@ -541,16 +526,16 @@ func startAPIs(
 	if err := apis.RegisterServer(ctx, auth.CreateServer(commands, queries, authRepo, config.SystemDefaults, keys.User), tlsConfig); err != nil {
 		return nil, err
 	}
-	if err := apis.RegisterService(ctx, user_v2beta.CreateServer(commands, queries, keys.User, keys.IDPConfig, idp.CallbackURL(), idp.SAMLRootURL(), assets.AssetAPI(), permissionCheck)); err != nil {
+	if err := apis.RegisterService(ctx, user_v2beta.CreateServer(config.SystemDefaults, commands, queries, keys.User, keys.IDPConfig, idp.CallbackURL(), idp.SAMLRootURL(), assets.AssetAPI(), permissionCheck)); err != nil {
 		return nil, err
 	}
 	if err := apis.RegisterService(ctx, user_v2.CreateServer(commands, queries, config.SystemDefaults, keys.User, keys.IDPConfig, idp.CallbackURL(), idp.SAMLRootURL(), assets.AssetAPI(), permissionCheck)); err != nil {
 		return nil, err
 	}
-	if err := apis.RegisterService(ctx, session_v2beta.CreateServer(commands, queries, permissionCheck)); err != nil {
+	if err := apis.RegisterService(ctx, session_v2beta.CreateServer(config.SystemDefaults, commands, queries, permissionCheck)); err != nil {
 		return nil, err
 	}
-	if err := apis.RegisterService(ctx, settings_v2beta.CreateServer(config.SystemDefaults, commands, queries, permissionCheck)); err != nil {
+	if err := apis.RegisterService(ctx, settings_v2beta.CreateServer(commands, queries)); err != nil {
 		return nil, err
 	}
 	if err := apis.RegisterService(ctx, org_v2beta.CreateServer(config.SystemDefaults, commands, queries, permissionCheck)); err != nil {
@@ -559,10 +544,10 @@ func startAPIs(
 	if err := apis.RegisterService(ctx, feature_v2beta.CreateServer(commands, queries)); err != nil {
 		return nil, err
 	}
-	if err := apis.RegisterService(ctx, session_v2.CreateServer(commands, queries, permissionCheck)); err != nil {
+	if err := apis.RegisterService(ctx, session_v2.CreateServer(config.SystemDefaults, commands, queries, permissionCheck)); err != nil {
 		return nil, err
 	}
-	if err := apis.RegisterService(ctx, settings_v2.CreateServer(config.SystemDefaults, commands, queries, permissionCheck)); err != nil {
+	if err := apis.RegisterService(ctx, settings_v2.CreateServer(commands, queries)); err != nil {
 		return nil, err
 	}
 	if err := apis.RegisterService(ctx, org_v2.CreateServer(config.SystemDefaults, commands, queries, permissionCheck)); err != nil {
@@ -613,13 +598,10 @@ func startAPIs(
 	if err := apis.RegisterService(ctx, authorization_v2.CreateServer(config.SystemDefaults, commands, queries, permissionCheck)); err != nil {
 		return nil, err
 	}
-	if err := apis.RegisterService(ctx, app_v2beta.CreateServer(commands, queries, permissionCheck)); err != nil {
+	if err := apis.RegisterService(ctx, app_v2beta.CreateServer(config.SystemDefaults, commands, queries, permissionCheck)); err != nil {
 		return nil, err
 	}
 	if err := apis.RegisterService(ctx, application.CreateServer(config.SystemDefaults, commands, queries, permissionCheck)); err != nil {
-		return nil, err
-	}
-	if err := apis.RegisterService(ctx, group_v2.CreateServer(config.SystemDefaults, commands, queries, permissionCheck)); err != nil {
 		return nil, err
 	}
 
@@ -727,7 +709,7 @@ func startAPIs(
 			instanceInterceptor.HandlerFuncWithError,
 			middleware.AuthorizationInterceptor(verifier, config.SystemAuthZ, config.InternalAuthZ).HandlerFuncWithError(schemas.HandlerPrefix)))
 
-	c, err := console.Start(config.Console, config.ExternalSecure, oidcServer.IssuerFromRequest, middleware.CallDurationHandler, instanceInterceptor.Handler, limitingAccessInterceptor, config.CustomerPortal)
+	c, err := console.Start(config.Console, oidcServer.IssuerFromRequest, middleware.CallDurationHandler, instanceInterceptor.Handler, limitingAccessInterceptor, config.CustomerPortal)
 	if err != nil {
 		return nil, fmt.Errorf("unable to start management console: %w", err)
 	}

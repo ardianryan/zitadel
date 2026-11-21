@@ -6,7 +6,6 @@ import (
 	"github.com/zitadel/zitadel/internal/api/authz"
 	"github.com/zitadel/zitadel/internal/domain"
 	"github.com/zitadel/zitadel/internal/eventstore"
-	"github.com/zitadel/zitadel/internal/repository/group"
 	"github.com/zitadel/zitadel/internal/repository/instance"
 	"github.com/zitadel/zitadel/internal/repository/org"
 	"github.com/zitadel/zitadel/internal/repository/project"
@@ -191,24 +190,4 @@ func (c *Commands) CheckPermissionOrganizationDelete(ctx context.Context, organi
 // registration does not require the permission; see the endpoint for the mode selection.
 func (c *Commands) CheckPermissionRegisterDynamicClient(ctx context.Context, organizationID string) error {
 	return c.newPermissionCheck(ctx, domain.PermissionProjectAppRegisterDynamic, org.AggregateType)(organizationID, organizationID)
-}
-
-func (c *Commands) checkPermissionCreateGroup(ctx context.Context, resourceOwner, groupID string) error {
-	return c.newPermissionCheck(ctx, domain.PermissionGroupCreate, group.AggregateType)(resourceOwner, groupID)
-}
-
-func (c *Commands) checkPermissionUpdateGroup(ctx context.Context, resourceOwner, groupID string) error {
-	return c.newPermissionCheck(ctx, domain.PermissionGroupWrite, group.AggregateType)(resourceOwner, groupID)
-}
-
-func (c *Commands) checkPermissionDeleteGroup(ctx context.Context, resourceOwner, groupID string) error {
-	return c.newPermissionCheck(ctx, domain.PermissionGroupDelete, group.AggregateType)(resourceOwner, groupID)
-}
-
-func (c *Commands) checkPermissionAddUserToGroup(ctx context.Context, resourceOwner, groupID string) error {
-	return c.newPermissionCheck(ctx, domain.PermissionGroupUserWrite, group.AggregateType)(resourceOwner, groupID)
-}
-
-func (c *Commands) checkPermissionRemoveUserFromGroup(ctx context.Context, resourceOwner, groupID string) error {
-	return c.newPermissionCheck(ctx, domain.PermissionGroupUserDelete, group.AggregateType)(resourceOwner, groupID)
 }

@@ -329,6 +329,7 @@ Errors:
       APIAuthMethodNoSecret: "选择的 API 身份验证方法不需要秘钥"
       AuthMethodNoPrivateKeyJWT: "选择的身份验证方法不需要 Key"
       ClientSecretInvalid: "Client Secret 无效"
+      ClientSecretNotSet: "未设置客户端密码"
       Key:
         AlreadyExisting: "已经存在的应用钥匙"
         NotFound: "未找到应用钥匙"
@@ -543,6 +544,7 @@ Errors:
     NotExisting: "AuthRequest不存在"
     WrongLoginClient: "其他登录客户端创建的AuthRequest"
     AlreadyHandled: "身份验证请求已被处理"
+    NotAuthenticated: "用户未认证"
   OIDCSession:
     RefreshTokenInvalid: "Refresh Token 无效"
     Token:

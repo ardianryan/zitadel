@@ -189,7 +189,8 @@
       "failedPrecondition": "Prasyarat tidak terpenuhi",
       "sessionNotValid": "Sesi tidak valid",
       "passwordVerificationMissing": "Verifikasi kata sandi tidak ditemukan.",
-      "passwordVerificationTooOld": "Verifikasi kata sandi sudah kadaluarsa. Silakan verifikasi ulang."
+      "passwordVerificationTooOld": "Verifikasi kata sandi sudah kadaluarsa. Silakan verifikasi ulang.",
+      "localAuthenticationNotAllowed": "Autentikasi lokal tidak diizinkan. Hubungi administrator Anda untuk informasi lebih lanjut."
     }
   },
   "idp": {
@@ -243,7 +244,8 @@
       "userCreationFailed": "Gagal membuat akun pengguna",
       "orgResolutionFailed": "Gagal menentukan organisasi untuk pendaftaran",
       "sessionCreationFailed": "Gagal membuat sesi atau menentukan pengalihan",
-      "unknownError": "Terjadi kesalahan yang tidak diketahui"
+      "unknownError": "Terjadi kesalahan yang tidak diketahui",
+      "sessionMismatch": "Pendaftaran dimulai di peramban lain. Silakan masuk kembali melalui penyedia identitas Anda."
     }
   },
   "ldap": {
@@ -273,7 +275,8 @@
       },
       "required": {
         "code": "Kode verifikasi wajib diisi"
-      }
+      },
+      "resendCodeIn": "Kirim ulang kode ({seconds} dtk)"
     },
     "set": {
       "title": "Atur Verifikasi Dua Langkah",
@@ -287,7 +290,20 @@
       },
       "required": {
         "code": "Kode verifikasi wajib diisi"
-      }
+      },
+      "emailAddDescription": "Gunakan kode sekali pakai yang dikirim ke alamat email terverifikasi Anda sebagai faktor kedua.",
+      "smsAddDescription": "Gunakan kode sekali pakai yang dikirim ke nomor telepon terverifikasi Anda sebagai faktor kedua.",
+      "add": "Tambahkan",
+      "emailAdded": "Kode melalui email berhasil ditambahkan.",
+      "smsAdded": "Kode melalui SMS berhasil ditambahkan."
+    },
+    "errors": {
+      "couldNotGetSession": "Sesi Anda tidak dapat dimuat. Silakan masuk kembali.",
+      "invalidMethod": "Faktor kedua ini tidak didukung.",
+      "couldNotAddEmail": "Kode melalui email tidak dapat ditambahkan.",
+      "couldNotAddSms": "Kode melalui SMS tidak dapat ditambahkan.",
+      "emailNotVerified": "Verifikasi alamat email Anda sebelum menambahkan kode melalui email.",
+      "phoneNotVerified": "Verifikasi nomor telepon Anda sebelum menambahkan kode melalui SMS."
     }
   },
   "passkey": {
@@ -437,7 +453,8 @@
       "title": "Konfirmasi Akses Perangkat",
       "description": "Perangkat ini meminta izin akses ke akun Anda.",
       "allow": "Izinkan Akses",
-      "deny": "Tolak"
+      "deny": "Tolak",
+      "usercode": "Kode yang ditampilkan di perangkat Anda:"
     }
   },
   "signedin": {
@@ -488,12 +505,14 @@
     "noUserCode": "Kode pengguna tidak diberikan!",
     "noDeviceRequest": "Permintaan otorisasi perangkat tidak ditemukan.",
     "unknownContext": "Konteks login tidak valid atau telah kadaluarsa. Silakan mulai ulang login Anda.",
-    "sessionExpired": "Sesi Anda telah berakhir. Silakan masuk kembali.",
+    "sessionExpired": "Sesi Anda telah kedaluwarsa atau memerlukan autentikasi ulang. Silakan masuk kembali.",
     "failedLoading": "Gagal memuat data. Silakan coba lagi.",
     "tryagain": "Coba Lagi",
     "couldNotContinueSession": "Tidak dapat melanjutkan sesi - informasi pengguna tidak ditemukan",
     "couldNotClearSession": "Gagal mengakhiri sesi. Silakan coba lagi.",
-    "general": "Terjadi kesalahan pada sistem. Silakan coba beberapa saat lagi."
+    "general": "Terjadi kesalahan pada sistem. Silakan coba beberapa saat lagi.",
+    "secondFactorRequired": "Verifikasi faktor kedua Anda terlebih dahulu untuk mengatur metode autentikasi baru.",
+    "authenticatorNotAllowed": "Metode autentikasi ini tidak diizinkan untuk organisasi Anda."
   },
   "edu": {
     "portalTagline": "PORTAL LAYANAN IDENTITAS TERPADU",

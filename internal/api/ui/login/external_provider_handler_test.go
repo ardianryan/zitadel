@@ -4,8 +4,9 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"golang.org/x/text/language"
 	"github.com/zitadel/oidc/v3/pkg/oidc"
+
+	"golang.org/x/text/language"
 
 	"github.com/zitadel/zitadel/internal/domain"
 	"github.com/zitadel/zitadel/internal/idp"

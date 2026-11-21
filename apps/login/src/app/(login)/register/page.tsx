@@ -4,7 +4,7 @@ import { RegistrationDisabledCard } from "@/components/edu/registration-disabled
 import { RegisterForm } from "@/components/register-form";
 import { SignInWithIdp } from "@/components/sign-in-with-idp";
 import { Translated } from "@/components/translated";
-import { getServiceConfig } from "@/lib/service-url";
+import { getServiceConfig } from "@/lib/server/service-url";
 import {
   getActiveIdentityProviders,
   getBrandingSettings,
@@ -13,7 +13,7 @@ import {
   getLoginSettings,
   getOrgById,
   getPasswordComplexitySettings,
-} from "@/lib/zitadel";
+} from "@/lib/server/zitadel";
 import { Organization } from "@zitadel/proto/zitadel/org/v2/org_pb";
 import { Metadata } from "next";
 import { getTranslations } from "next-intl/server";

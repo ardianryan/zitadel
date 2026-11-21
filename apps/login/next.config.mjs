@@ -37,6 +37,11 @@ const nextConfig = {
     root: monorepoRoot,
   },
   reactStrictMode: true,
+  typescript: {
+    // Since Next.js 16.3 the build type-checks every file matched by tsconfig.json,
+    // including unit tests, which vitest runs without type-checking.
+    tsconfigPath: "tsconfig.build.json",
+  },
   experimental: {
     // Add React 19 compatibility optimizations
     optimizePackageImports: ["@radix-ui/react-tooltip", "@heroicons/react"],
@@ -51,22 +56,28 @@ const nextConfig = {
   // incompatibilities. Keep this list in sync with package.json dependencies
   // when adding new OpenTelemetry or logging packages.
   serverExternalPackages: [
-    "winston",
-    "@opentelemetry/api",
-    "@opentelemetry/api-logs",
-    "@opentelemetry/sdk-node",
-    "@opentelemetry/sdk-metrics",
-    "@opentelemetry/sdk-logs",
-    "@opentelemetry/exporter-metrics-otlp-http",
-    "@opentelemetry/exporter-logs-otlp-http",
-    "@opentelemetry/exporter-prometheus",
-    "@opentelemetry/resources",
-    "@opentelemetry/semantic-conventions",
-    "@opentelemetry/auto-instrumentations-node",
-    "@opentelemetry/winston-transport",
-    "@opentelemetry/resource-detector-container",
-    "@opentelemetry/resource-detector-gcp",
+    'winston',
+    '@opentelemetry/api',
+    '@opentelemetry/api-logs',
+    '@opentelemetry/sdk-node',
+    '@opentelemetry/sdk-metrics',
+    '@opentelemetry/sdk-logs',
+    '@opentelemetry/exporter-metrics-otlp-http',
+    '@opentelemetry/exporter-logs-otlp-http',
+    '@opentelemetry/exporter-prometheus',
+    '@opentelemetry/resources',
+    '@opentelemetry/semantic-conventions',
+    '@opentelemetry/auto-instrumentations-node',
+    '@opentelemetry/winston-transport',
+    '@opentelemetry/resource-detector-container',
+    '@opentelemetry/resource-detector-gcp',
   ],
+  // Improve SSR stability - not actually needed for React 19 SSR issues
+  // onDemandEntries: {
+  //   maxInactiveAge: 25 * 1000,
+  //   pagesBufferLength: 2,
+  // },
+  // Better error handling for production builds
   poweredByHeader: false,
   async headers() {
     return [

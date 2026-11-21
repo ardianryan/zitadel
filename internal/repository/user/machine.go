@@ -17,8 +17,8 @@ const (
 type MachineAddedEvent struct {
 	eventstore.BaseEvent `json:"-"`
 
-	UserName          string `json:"userName"`
-	orgScopedUsername bool
+	UserName              string `json:"userName"`
+	userLoginMustBeDomain bool
 
 	Name            string               `json:"name,omitempty"`
 	Description     string               `json:"description,omitempty"`
@@ -32,7 +32,7 @@ func (e *MachineAddedEvent) Payload() interface{} {
 }
 
 func (e *MachineAddedEvent) UniqueConstraints() []*eventstore.UniqueConstraint {
-	return []*eventstore.UniqueConstraint{NewAddUsernameUniqueConstraint(e.UserName, e.Aggregate().ResourceOwner, e.orgScopedUsername).WithOwners(usernameOwnerTags(e.Aggregate())...)}
+	return []*eventstore.UniqueConstraint{NewAddUsernameUniqueConstraint(e.UserName, e.Aggregate().ResourceOwner, e.userLoginMustBeDomain).WithOwners(usernameOwnerTags(e.Aggregate())...)}
 }
 
 func NewMachineAddedEvent(
@@ -41,7 +41,7 @@ func NewMachineAddedEvent(
 	userName,
 	name,
 	description string,
-	orgScopedUsername bool,
+	userLoginMustBeDomain bool,
 	accessTokenType domain.OIDCTokenType,
 ) *MachineAddedEvent {
 	return &MachineAddedEvent{
@@ -50,11 +50,11 @@ func NewMachineAddedEvent(
 			aggregate,
 			MachineAddedEventType,
 		),
-		UserName:          userName,
-		Name:              name,
-		Description:       description,
-		orgScopedUsername: orgScopedUsername,
-		AccessTokenType:   accessTokenType,
+		UserName:              userName,
+		Name:                  name,
+		Description:           description,
+		userLoginMustBeDomain: userLoginMustBeDomain,
+		AccessTokenType:       accessTokenType,
 	}
 }
 

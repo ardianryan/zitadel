@@ -1,8 +1,8 @@
 import { DynamicTheme } from "@/components/dynamic-theme";
 import { LogoutDoneCard } from "@/components/logout-done-card";
-import { getAllSessions } from "@/lib/cookies";
-import { getServiceConfig } from "@/lib/service-url";
-import { getBrandingSettings } from "@/lib/zitadel";
+import { getAllSessions } from "@/lib/server/cookies";
+import { getServiceConfig } from "@/lib/server/service-url";
+import { getBrandingSettings } from "@/lib/server/zitadel";
 import { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { headers } from "next/headers";

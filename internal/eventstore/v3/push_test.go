@@ -2,6 +2,7 @@ package eventstore
 
 import (
 	"context"
+	"database/sql"
 	_ "embed"
 	"testing"
 
@@ -10,9 +11,6 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 
-	new_db "github.com/zitadel/zitadel/backend/v3/storage/database"
-	new_pg "github.com/zitadel/zitadel/backend/v3/storage/database/dialect/postgres"
-	"github.com/zitadel/zitadel/backend/v3/storage/database/dialect/sql"
 	"github.com/zitadel/zitadel/internal/api/authz"
 	"github.com/zitadel/zitadel/internal/database"
 	"github.com/zitadel/zitadel/internal/database/postgres"
@@ -270,7 +268,7 @@ func TestEventstore_queueExecutions(t *testing.T) {
 	}
 	type args struct {
 		ctx    context.Context
-		tx     new_db.Transaction
+		tx     database.Tx
 		events []eventstore.Event
 	}
 	tests := []struct {
@@ -280,7 +278,7 @@ func TestEventstore_queueExecutions(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			name: "no Tx type, noop",
+			name: "incorrect Tx type, noop",
 			queue: func(t *testing.T) eventstore.ExecutionQueue {
 				mQueue := mock.NewMockExecutionQueue(gomock.NewController(t))
 				return mQueue
@@ -293,19 +291,6 @@ func TestEventstore_queueExecutions(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "incorrect Tx type, noop",
-			queue: func(t *testing.T) eventstore.ExecutionQueue {
-				mQueue := mock.NewMockExecutionQueue(gomock.NewController(t))
-				return mQueue
-			},
-			args: args{
-				ctx:    context.Background(),
-				tx:     new_pg.PGxTx(nil),
-				events: events,
-			},
-			wantErr: false,
-		},
-		{
 			name: "no events",
 			queue: func(t *testing.T) eventstore.ExecutionQueue {
 				mQueue := mock.NewMockExecutionQueue(gomock.NewController(t))
@@ -313,7 +298,7 @@ func TestEventstore_queueExecutions(t *testing.T) {
 			},
 			args: args{
 				ctx:    context.Background(),
-				tx:     sql.SQLTx(nil),
+				tx:     &sql.Tx{},
 				events: []eventstore.Event{},
 			},
 			wantErr: false,
@@ -326,7 +311,7 @@ func TestEventstore_queueExecutions(t *testing.T) {
 			},
 			args: args{
 				ctx:    context.Background(),
-				tx:     sql.SQLTx(nil),
+				tx:     &sql.Tx{},
 				events: events,
 			},
 			wantErr: false,
@@ -346,7 +331,7 @@ func TestEventstore_queueExecutions(t *testing.T) {
 						},
 					}),
 				),
-				tx:     sql.SQLTx(nil),
+				tx:     &sql.Tx{},
 				events: events,
 			},
 			wantErr: false,
@@ -375,7 +360,7 @@ func TestEventstore_queueExecutions(t *testing.T) {
 						{ExecutionID: "event"},
 					}),
 				),
-				tx:     sql.SQLTx(nil),
+				tx:     &sql.Tx{},
 				events: events,
 			},
 			wantErr: false,
@@ -404,7 +389,7 @@ func TestEventstore_queueExecutions(t *testing.T) {
 						{ExecutionID: "event/ex.removed"},
 					}),
 				),
-				tx:     sql.SQLTx(nil),
+				tx:     &sql.Tx{},
 				events: events,
 			},
 			wantErr: false,

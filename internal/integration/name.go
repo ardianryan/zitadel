@@ -91,7 +91,3 @@ func Slogan() string {
 func Number() int {
 	return gofakeit.Number(0, 1_000_000)
 }
-
-func GroupName() string {
-	return "group_" + appName()
-}

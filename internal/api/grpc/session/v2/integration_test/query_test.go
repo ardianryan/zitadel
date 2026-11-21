@@ -18,7 +18,6 @@ import (
 	objpb "github.com/zitadel/zitadel/pkg/grpc/object"
 	"github.com/zitadel/zitadel/pkg/grpc/object/v2"
 	"github.com/zitadel/zitadel/pkg/grpc/session/v2"
-	"github.com/zitadel/zitadel/pkg/grpc/user/v2"
 )
 
 func TestServer_GetSession(t *testing.T) {
@@ -248,60 +247,73 @@ type sessionAttr struct {
 	Details      *object.Details
 }
 
-// listSessionsEnv holds the environment context for ListSessions tests.
-type listSessionsEnv struct {
-	ownerCtx    context.Context // IAMOwner-level context; can list all sessions
-	loginCtx    context.Context // login-user context; used for session creation in deps
-	noPermCtx   context.Context // no-permission context; used to verify access restrictions
-	client      session.SessionServiceClient
-	loginUserID string
-	testUser    *user.AddHumanUserResponse
-	newUser     func(ctx context.Context) *user.AddHumanUserResponse
+type sessionAttrs []*sessionAttr
+
+func (u sessionAttrs) ids() []string {
+	ids := make([]string, len(u))
+	for i := range u {
+		ids[i] = u[i].ID
+	}
+	return ids
 }
 
-// runListSessionsTestCases defines and runs the full ListSessions test suite against env.
-func runListSessionsTestCases(t *testing.T, env listSessionsEnv) {
-	t.Helper()
+func createSessions(ctx context.Context, t *testing.T, count int, userID string, userAgent string, lifetime *durationpb.Duration, metadata map[string][]byte) sessionAttrs {
+	infos := make([]*sessionAttr, count)
+	for i := 0; i < count; i++ {
+		infos[i] = createSession(ctx, t, userID, userAgent, lifetime, metadata)
+	}
+	return infos
+}
 
-	// newSess creates a session on env.client via the eventstore model (grpc).
-	newSess := func(t *testing.T, ctx context.Context, userID, userAgent string, lifetime *durationpb.Duration, metadata map[string][]byte) *sessionAttr {
-		req := &session.CreateSessionRequest{}
-		if userID != "" {
-			req.Checks = &session.Checks{
-				User: &session.CheckUser{Search: &session.CheckUser_UserId{UserId: userID}},
-			}
-		}
-		if userAgent != "" {
-			req.UserAgent = &session.UserAgent{
-				FingerprintId: gu.Ptr(userAgent),
-				Ip:            gu.Ptr("1.2.3.4"),
-				Description:   gu.Ptr("Description"),
-				Header:        map[string]*session.UserAgent_HeaderValues{"foo": {Values: []string{"foo", "bar"}}},
-			}
-		}
-		if lifetime != nil {
-			req.Lifetime = lifetime
-		}
-		if metadata != nil {
-			req.Metadata = metadata
-		}
-		resp, err := env.client.CreateSession(ctx, req)
-		require.NoError(t, err)
-		return &sessionAttr{
-			ID:           resp.GetSessionId(),
-			UserID:       userID,
-			UserAgent:    userAgent,
-			CreationDate: resp.GetDetails().GetChangeDate(),
-			ChangeDate:   resp.GetDetails().GetChangeDate(),
-			Details:      resp.GetDetails(),
+func createSession(ctx context.Context, t *testing.T, userID string, userAgent string, lifetime *durationpb.Duration, metadata map[string][]byte) *sessionAttr {
+	req := &session.CreateSessionRequest{}
+	if userID != "" {
+		req.Checks = &session.Checks{
+			User: &session.CheckUser{
+				Search: &session.CheckUser_UserId{
+					UserId: userID,
+				},
+			},
 		}
 	}
+	if userAgent != "" {
+		req.UserAgent = &session.UserAgent{
+			FingerprintId: gu.Ptr(userAgent),
+			Ip:            gu.Ptr("1.2.3.4"),
+			Description:   gu.Ptr("Description"),
+			Header: map[string]*session.UserAgent_HeaderValues{
+				"foo": {Values: []string{"foo", "bar"}},
+			},
+		}
+	}
+	if lifetime != nil {
+		req.Lifetime = lifetime
+	}
+	if metadata != nil {
+		req.Metadata = metadata
+	}
+	resp, err := Client.CreateSession(ctx, req)
+	require.NoError(t, err)
+	return &sessionAttr{
+		resp.GetSessionId(),
+		userID,
+		userAgent,
+		resp.GetDetails().GetChangeDate(),
+		resp.GetDetails().GetChangeDate(),
+		resp.GetDetails(),
+	}
+}
 
+func TestServer_ListSessions(t *testing.T) {
+	t.Parallel()
+	type args struct {
+		ctx context.Context
+		req *session.ListSessionsRequest
+		dep func(ctx context.Context, t *testing.T, request *session.ListSessionsRequest) []*sessionAttr
+	}
 	tests := []struct {
 		name                 string
-		ctx                  context.Context
-		req                  *session.ListSessionsRequest
-		dep                  func(t *testing.T, req *session.ListSessionsRequest) []*sessionAttr
+		args                 args
 		want                 *session.ListSessionsResponse
 		wantFactors          []wantFactor
 		wantExpirationWindow time.Duration
@@ -309,61 +321,83 @@ func runListSessionsTestCases(t *testing.T, env listSessionsEnv) {
 	}{
 		{
 			name: "list sessions, not found",
-			ctx:  env.ownerCtx,
-			req: &session.ListSessionsRequest{
-				Queries: []*session.SearchQuery{
-					{Query: &session.SearchQuery_IdsQuery{IdsQuery: &session.IDsQuery{Ids: []string{"unknown"}}}},
+			args: args{
+				CTX,
+				&session.ListSessionsRequest{
+					Queries: []*session.SearchQuery{
+						{Query: &session.SearchQuery_IdsQuery{IdsQuery: &session.IDsQuery{Ids: []string{"unknown"}}}},
+					},
+				},
+				func(ctx context.Context, t *testing.T, request *session.ListSessionsRequest) []*sessionAttr {
+					return []*sessionAttr{}
 				},
 			},
-			dep: func(t *testing.T, req *session.ListSessionsRequest) []*sessionAttr {
-				return []*sessionAttr{}
-			},
 			want: &session.ListSessionsResponse{
-				Details:  &object.ListDetails{TotalResult: 0, Timestamp: timestamppb.Now()},
+				Details: &object.ListDetails{
+					TotalResult: 0,
+					Timestamp:   timestamppb.Now(),
+				},
 				Sessions: []*session.Session{},
 			},
 		},
 		{
 			name: "list sessions, no permission",
-			ctx:  env.noPermCtx,
-			req:  &session.ListSessionsRequest{Queries: []*session.SearchQuery{}},
-			dep: func(t *testing.T, req *session.ListSessionsRequest) []*sessionAttr {
-				info := newSess(t, env.loginCtx, "", "", nil, nil)
-				req.Queries = append(req.Queries, &session.SearchQuery{Query: &session.SearchQuery_IdsQuery{IdsQuery: &session.IDsQuery{Ids: []string{info.ID}}}})
-				return []*sessionAttr{}
+			args: args{
+				UserCTX,
+				&session.ListSessionsRequest{
+					Queries: []*session.SearchQuery{},
+				},
+				func(ctx context.Context, t *testing.T, request *session.ListSessionsRequest) []*sessionAttr {
+					info := createSession(ctx, t, "", "", nil, nil)
+					request.Queries = append(request.Queries, &session.SearchQuery{Query: &session.SearchQuery_IdsQuery{IdsQuery: &session.IDsQuery{Ids: []string{info.ID}}}})
+					return []*sessionAttr{}
+				},
 			},
 			want: &session.ListSessionsResponse{
-				Details:  &object.ListDetails{TotalResult: 1, Timestamp: timestamppb.Now()},
+				Details: &object.ListDetails{
+					TotalResult: 1,
+					Timestamp:   timestamppb.Now(),
+				},
 				Sessions: []*session.Session{},
 			},
 		},
 		{
 			name: "list sessions, permission, ok",
-			ctx:  env.ownerCtx,
-			req:  &session.ListSessionsRequest{},
-			dep: func(t *testing.T, req *session.ListSessionsRequest) []*sessionAttr {
-				info := newSess(t, env.loginCtx, "", "", nil, nil)
-				req.Queries = append(req.Queries, &session.SearchQuery{Query: &session.SearchQuery_IdsQuery{IdsQuery: &session.IDsQuery{Ids: []string{info.ID}}}})
-				return []*sessionAttr{info}
+			args: args{
+				IAMOwnerCTX,
+				&session.ListSessionsRequest{},
+				func(ctx context.Context, t *testing.T, request *session.ListSessionsRequest) []*sessionAttr {
+					info := createSession(ctx, t, "", "", nil, nil)
+					request.Queries = append(request.Queries, &session.SearchQuery{Query: &session.SearchQuery_IdsQuery{IdsQuery: &session.IDsQuery{Ids: []string{info.ID}}}})
+					return []*sessionAttr{info}
+				},
 			},
 			want: &session.ListSessionsResponse{
-				Details:  &object.ListDetails{TotalResult: 1, Timestamp: timestamppb.Now()},
+				Details: &object.ListDetails{
+					TotalResult: 1,
+					Timestamp:   timestamppb.Now(),
+				},
 				Sessions: []*session.Session{{}},
 			},
 		},
 		{
 			name: "list sessions, full, ok",
-			ctx:  env.ownerCtx,
-			req:  &session.ListSessionsRequest{},
-			dep: func(t *testing.T, req *session.ListSessionsRequest) []*sessionAttr {
-				info := newSess(t, env.loginCtx, env.testUser.GetUserId(), "agent", durationpb.New(time.Minute*5), map[string][]byte{"key": []byte("value")})
-				req.Queries = append(req.Queries, &session.SearchQuery{Query: &session.SearchQuery_IdsQuery{IdsQuery: &session.IDsQuery{Ids: []string{info.ID}}}})
-				return []*sessionAttr{info}
+			args: args{
+				CTX,
+				&session.ListSessionsRequest{},
+				func(ctx context.Context, t *testing.T, request *session.ListSessionsRequest) []*sessionAttr {
+					info := createSession(ctx, t, User.GetUserId(), "agent", durationpb.New(time.Minute*5), map[string][]byte{"key": []byte("value")})
+					request.Queries = append(request.Queries, &session.SearchQuery{Query: &session.SearchQuery_IdsQuery{IdsQuery: &session.IDsQuery{Ids: []string{info.ID}}}})
+					return []*sessionAttr{info}
+				},
 			},
 			wantExpirationWindow: time.Minute * 5,
 			wantFactors:          []wantFactor{wantUserFactor},
 			want: &session.ListSessionsResponse{
-				Details: &object.ListDetails{TotalResult: 1, Timestamp: timestamppb.Now()},
+				Details: &object.ListDetails{
+					TotalResult: 1,
+					Timestamp:   timestamppb.Now(),
+				},
 				Sessions: []*session.Session{
 					{
 						Metadata: map[string][]byte{"key": []byte("value")},
@@ -371,7 +405,9 @@ func runListSessionsTestCases(t *testing.T, env listSessionsEnv) {
 							FingerprintId: gu.Ptr("agent"),
 							Ip:            gu.Ptr("1.2.3.4"),
 							Description:   gu.Ptr("Description"),
-							Header:        map[string]*session.UserAgent_HeaderValues{"foo": {Values: []string{"foo", "bar"}}},
+							Header: map[string]*session.UserAgent_HeaderValues{
+								"foo": {Values: []string{"foo", "bar"}},
+							},
 						},
 					},
 				},
@@ -379,22 +415,22 @@ func runListSessionsTestCases(t *testing.T, env listSessionsEnv) {
 		},
 		{
 			name: "list sessions, multiple, ok",
-			ctx:  env.ownerCtx,
-			req:  &session.ListSessionsRequest{},
-			dep: func(t *testing.T, req *session.ListSessionsRequest) []*sessionAttr {
-				infos := make([]*sessionAttr, 3)
-				ids := make([]string, 3)
-				for i := range infos {
-					infos[i] = newSess(t, env.loginCtx, env.testUser.GetUserId(), "agent", durationpb.New(time.Minute*5), map[string][]byte{"key": []byte("value")})
-					ids[i] = infos[i].ID
-				}
-				req.Queries = append(req.Queries, &session.SearchQuery{Query: &session.SearchQuery_IdsQuery{IdsQuery: &session.IDsQuery{Ids: ids}}})
-				return infos
+			args: args{
+				CTX,
+				&session.ListSessionsRequest{},
+				func(ctx context.Context, t *testing.T, request *session.ListSessionsRequest) []*sessionAttr {
+					infos := createSessions(ctx, t, 3, User.GetUserId(), "agent", durationpb.New(time.Minute*5), map[string][]byte{"key": []byte("value")})
+					request.Queries = append(request.Queries, &session.SearchQuery{Query: &session.SearchQuery_IdsQuery{IdsQuery: &session.IDsQuery{Ids: infos.ids()}}})
+					return infos
+				},
 			},
 			wantExpirationWindow: time.Minute * 5,
 			wantFactors:          []wantFactor{wantUserFactor},
 			want: &session.ListSessionsResponse{
-				Details: &object.ListDetails{TotalResult: 3, Timestamp: timestamppb.Now()},
+				Details: &object.ListDetails{
+					TotalResult: 3,
+					Timestamp:   timestamppb.Now(),
+				},
 				Sessions: []*session.Session{
 					{
 						Metadata: map[string][]byte{"key": []byte("value")},
@@ -402,7 +438,9 @@ func runListSessionsTestCases(t *testing.T, env listSessionsEnv) {
 							FingerprintId: gu.Ptr("agent"),
 							Ip:            gu.Ptr("1.2.3.4"),
 							Description:   gu.Ptr("Description"),
-							Header:        map[string]*session.UserAgent_HeaderValues{"foo": {Values: []string{"foo", "bar"}}},
+							Header: map[string]*session.UserAgent_HeaderValues{
+								"foo": {Values: []string{"foo", "bar"}},
+							},
 						},
 					},
 					{
@@ -411,7 +449,9 @@ func runListSessionsTestCases(t *testing.T, env listSessionsEnv) {
 							FingerprintId: gu.Ptr("agent"),
 							Ip:            gu.Ptr("1.2.3.4"),
 							Description:   gu.Ptr("Description"),
-							Header:        map[string]*session.UserAgent_HeaderValues{"foo": {Values: []string{"foo", "bar"}}},
+							Header: map[string]*session.UserAgent_HeaderValues{
+								"foo": {Values: []string{"foo", "bar"}},
+							},
 						},
 					},
 					{
@@ -420,7 +460,9 @@ func runListSessionsTestCases(t *testing.T, env listSessionsEnv) {
 							FingerprintId: gu.Ptr("agent"),
 							Ip:            gu.Ptr("1.2.3.4"),
 							Description:   gu.Ptr("Description"),
-							Header:        map[string]*session.UserAgent_HeaderValues{"foo": {Values: []string{"foo", "bar"}}},
+							Header: map[string]*session.UserAgent_HeaderValues{
+								"foo": {Values: []string{"foo", "bar"}},
+							},
 						},
 					},
 				},
@@ -428,18 +470,23 @@ func runListSessionsTestCases(t *testing.T, env listSessionsEnv) {
 		},
 		{
 			name: "list sessions, userid, ok",
-			ctx:  env.ownerCtx,
-			req:  &session.ListSessionsRequest{},
-			dep: func(t *testing.T, req *session.ListSessionsRequest) []*sessionAttr {
-				createdUser := env.newUser(env.loginCtx)
-				info := newSess(t, env.loginCtx, createdUser.GetUserId(), "agent", durationpb.New(time.Minute*5), map[string][]byte{"key": []byte("value")})
-				req.Queries = append(req.Queries, &session.SearchQuery{Query: &session.SearchQuery_UserIdQuery{UserIdQuery: &session.UserIDQuery{Id: createdUser.GetUserId()}}})
-				return []*sessionAttr{info}
+			args: args{
+				CTX,
+				&session.ListSessionsRequest{},
+				func(ctx context.Context, t *testing.T, request *session.ListSessionsRequest) []*sessionAttr {
+					createdUser := createFullUser(ctx)
+					info := createSession(ctx, t, createdUser.GetUserId(), "agent", durationpb.New(time.Minute*5), map[string][]byte{"key": []byte("value")})
+					request.Queries = append(request.Queries, &session.SearchQuery{Query: &session.SearchQuery_UserIdQuery{UserIdQuery: &session.UserIDQuery{Id: createdUser.GetUserId()}}})
+					return []*sessionAttr{info}
+				},
 			},
 			wantExpirationWindow: time.Minute * 5,
 			wantFactors:          []wantFactor{wantUserFactor},
 			want: &session.ListSessionsResponse{
-				Details: &object.ListDetails{TotalResult: 1, Timestamp: timestamppb.Now()},
+				Details: &object.ListDetails{
+					TotalResult: 1,
+					Timestamp:   timestamppb.Now(),
+				},
 				Sessions: []*session.Session{
 					{
 						Metadata: map[string][]byte{"key": []byte("value")},
@@ -447,7 +494,9 @@ func runListSessionsTestCases(t *testing.T, env listSessionsEnv) {
 							FingerprintId: gu.Ptr("agent"),
 							Ip:            gu.Ptr("1.2.3.4"),
 							Description:   gu.Ptr("Description"),
-							Header:        map[string]*session.UserAgent_HeaderValues{"foo": {Values: []string{"foo", "bar"}}},
+							Header: map[string]*session.UserAgent_HeaderValues{
+								"foo": {Values: []string{"foo", "bar"}},
+							},
 						},
 					},
 				},
@@ -455,19 +504,24 @@ func runListSessionsTestCases(t *testing.T, env listSessionsEnv) {
 		},
 		{
 			name: "list sessions, own creator, ok",
-			ctx:  env.loginCtx,
-			req:  &session.ListSessionsRequest{},
-			dep: func(t *testing.T, req *session.ListSessionsRequest) []*sessionAttr {
-				info := newSess(t, env.loginCtx, env.testUser.GetUserId(), "agent", durationpb.New(time.Minute*5), map[string][]byte{"key": []byte("value")})
-				req.Queries = append(req.Queries,
-					&session.SearchQuery{Query: &session.SearchQuery_IdsQuery{IdsQuery: &session.IDsQuery{Ids: []string{info.ID}}}},
-					&session.SearchQuery{Query: &session.SearchQuery_CreatorQuery{CreatorQuery: &session.CreatorQuery{}}})
-				return []*sessionAttr{info}
+			args: args{
+				LoginCTX,
+				&session.ListSessionsRequest{},
+				func(ctx context.Context, t *testing.T, request *session.ListSessionsRequest) []*sessionAttr {
+					info := createSession(ctx, t, User.GetUserId(), "agent", durationpb.New(time.Minute*5), map[string][]byte{"key": []byte("value")})
+					request.Queries = append(request.Queries,
+						&session.SearchQuery{Query: &session.SearchQuery_IdsQuery{IdsQuery: &session.IDsQuery{Ids: []string{info.ID}}}},
+						&session.SearchQuery{Query: &session.SearchQuery_CreatorQuery{CreatorQuery: &session.CreatorQuery{}}})
+					return []*sessionAttr{info}
+				},
 			},
 			wantExpirationWindow: time.Minute * 5,
 			wantFactors:          []wantFactor{wantUserFactor},
 			want: &session.ListSessionsResponse{
-				Details: &object.ListDetails{TotalResult: 1, Timestamp: timestamppb.Now()},
+				Details: &object.ListDetails{
+					TotalResult: 1,
+					Timestamp:   timestamppb.Now(),
+				},
 				Sessions: []*session.Session{
 					{
 						Metadata: map[string][]byte{"key": []byte("value")},
@@ -475,7 +529,9 @@ func runListSessionsTestCases(t *testing.T, env listSessionsEnv) {
 							FingerprintId: gu.Ptr("agent"),
 							Ip:            gu.Ptr("1.2.3.4"),
 							Description:   gu.Ptr("Description"),
-							Header:        map[string]*session.UserAgent_HeaderValues{"foo": {Values: []string{"foo", "bar"}}},
+							Header: map[string]*session.UserAgent_HeaderValues{
+								"foo": {Values: []string{"foo", "bar"}},
+							},
 						},
 					},
 				},
@@ -483,19 +539,24 @@ func runListSessionsTestCases(t *testing.T, env listSessionsEnv) {
 		},
 		{
 			name: "list sessions, creator, ok",
-			ctx:  env.ownerCtx,
-			req:  &session.ListSessionsRequest{},
-			dep: func(t *testing.T, req *session.ListSessionsRequest) []*sessionAttr {
-				info := newSess(t, env.loginCtx, env.testUser.GetUserId(), "agent", durationpb.New(time.Minute*5), map[string][]byte{"key": []byte("value")})
-				req.Queries = append(req.Queries,
-					&session.SearchQuery{Query: &session.SearchQuery_IdsQuery{IdsQuery: &session.IDsQuery{Ids: []string{info.ID}}}},
-					&session.SearchQuery{Query: &session.SearchQuery_CreatorQuery{CreatorQuery: &session.CreatorQuery{Id: gu.Ptr(env.loginUserID)}}})
-				return []*sessionAttr{info}
+			args: args{
+				IAMOwnerCTX,
+				&session.ListSessionsRequest{},
+				func(ctx context.Context, t *testing.T, request *session.ListSessionsRequest) []*sessionAttr {
+					info := createSession(ctx, t, User.GetUserId(), "agent", durationpb.New(time.Minute*5), map[string][]byte{"key": []byte("value")})
+					request.Queries = append(request.Queries,
+						&session.SearchQuery{Query: &session.SearchQuery_IdsQuery{IdsQuery: &session.IDsQuery{Ids: []string{info.ID}}}},
+						&session.SearchQuery{Query: &session.SearchQuery_CreatorQuery{CreatorQuery: &session.CreatorQuery{Id: gu.Ptr(Instance.Users.Get(integration.UserTypeLogin).ID)}}})
+					return []*sessionAttr{info}
+				},
 			},
 			wantExpirationWindow: time.Minute * 5,
 			wantFactors:          []wantFactor{wantUserFactor},
 			want: &session.ListSessionsResponse{
-				Details: &object.ListDetails{TotalResult: 1, Timestamp: timestamppb.Now()},
+				Details: &object.ListDetails{
+					TotalResult: 1,
+					Timestamp:   timestamppb.Now(),
+				},
 				Sessions: []*session.Session{
 					{
 						Metadata: map[string][]byte{"key": []byte("value")},
@@ -503,56 +564,72 @@ func runListSessionsTestCases(t *testing.T, env listSessionsEnv) {
 							FingerprintId: gu.Ptr("agent"),
 							Ip:            gu.Ptr("1.2.3.4"),
 							Description:   gu.Ptr("Description"),
-							Header:        map[string]*session.UserAgent_HeaderValues{"foo": {Values: []string{"foo", "bar"}}},
+							Header: map[string]*session.UserAgent_HeaderValues{
+								"foo": {Values: []string{"foo", "bar"}},
+							},
 						},
 					},
 				},
 			},
 		},
 		{
-			// CreatorQuery with nil ID means "filter by caller's userID" (ownerCtx user).
-			// Session was created by loginCtx user, so ownerUser != creator → no match.
 			name: "list sessions, wrong creator",
-			ctx:  env.ownerCtx,
-			req:  &session.ListSessionsRequest{},
-			dep: func(t *testing.T, req *session.ListSessionsRequest) []*sessionAttr {
-				info := newSess(t, env.loginCtx, env.testUser.GetUserId(), "agent", durationpb.New(time.Minute*5), map[string][]byte{"key": []byte("value")})
-				req.Queries = append(req.Queries,
-					&session.SearchQuery{Query: &session.SearchQuery_IdsQuery{IdsQuery: &session.IDsQuery{Ids: []string{info.ID}}}},
-					&session.SearchQuery{Query: &session.SearchQuery_CreatorQuery{CreatorQuery: &session.CreatorQuery{}}})
-				return []*sessionAttr{}
+			args: args{
+				IAMOwnerCTX,
+				&session.ListSessionsRequest{},
+				func(ctx context.Context, t *testing.T, request *session.ListSessionsRequest) []*sessionAttr {
+					info := createSession(ctx, t, User.GetUserId(), "agent", durationpb.New(time.Minute*5), map[string][]byte{"key": []byte("value")})
+					request.Queries = append(request.Queries,
+						&session.SearchQuery{Query: &session.SearchQuery_IdsQuery{IdsQuery: &session.IDsQuery{Ids: []string{info.ID}}}},
+						&session.SearchQuery{Query: &session.SearchQuery_CreatorQuery{CreatorQuery: &session.CreatorQuery{}}})
+					return []*sessionAttr{}
+				},
 			},
+			wantExpirationWindow: time.Minute * 5,
+			wantFactors:          []wantFactor{wantUserFactor},
 			want: &session.ListSessionsResponse{
-				Details:  &object.ListDetails{TotalResult: 0, Timestamp: timestamppb.Now()},
+				Details: &object.ListDetails{
+					TotalResult: 0,
+					Timestamp:   timestamppb.Now(),
+				},
 				Sessions: []*session.Session{},
 			},
 		},
 		{
 			name: "list sessions, empty creator",
-			ctx:  env.ownerCtx,
-			req:  &session.ListSessionsRequest{},
-			dep: func(t *testing.T, req *session.ListSessionsRequest) []*sessionAttr {
-				req.Queries = append(req.Queries,
-					&session.SearchQuery{Query: &session.SearchQuery_CreatorQuery{CreatorQuery: &session.CreatorQuery{Id: gu.Ptr("")}}})
-				return []*sessionAttr{}
+			args: args{
+				IAMOwnerCTX,
+				&session.ListSessionsRequest{},
+				func(ctx context.Context, t *testing.T, request *session.ListSessionsRequest) []*sessionAttr {
+					request.Queries = append(request.Queries,
+						&session.SearchQuery{Query: &session.SearchQuery_CreatorQuery{CreatorQuery: &session.CreatorQuery{Id: gu.Ptr("")}}})
+					return []*sessionAttr{}
+				},
 			},
-			wantErr: true,
+			wantExpirationWindow: time.Minute * 5,
+			wantFactors:          []wantFactor{wantUserFactor},
+			wantErr:              true,
 		},
 		{
 			name: "list sessions, useragent, ok",
-			ctx:  env.ownerCtx,
-			req:  &session.ListSessionsRequest{},
-			dep: func(t *testing.T, req *session.ListSessionsRequest) []*sessionAttr {
-				info := newSess(t, env.loginCtx, env.testUser.GetUserId(), "useragent", durationpb.New(time.Minute*5), map[string][]byte{"key": []byte("value")})
-				req.Queries = append(req.Queries,
-					&session.SearchQuery{Query: &session.SearchQuery_IdsQuery{IdsQuery: &session.IDsQuery{Ids: []string{info.ID}}}},
-					&session.SearchQuery{Query: &session.SearchQuery_UserAgentQuery{UserAgentQuery: &session.UserAgentQuery{FingerprintId: gu.Ptr("useragent")}}})
-				return []*sessionAttr{info}
+			args: args{
+				IAMOwnerCTX,
+				&session.ListSessionsRequest{},
+				func(ctx context.Context, t *testing.T, request *session.ListSessionsRequest) []*sessionAttr {
+					info := createSession(ctx, t, User.GetUserId(), "useragent", durationpb.New(time.Minute*5), map[string][]byte{"key": []byte("value")})
+					request.Queries = append(request.Queries,
+						&session.SearchQuery{Query: &session.SearchQuery_IdsQuery{IdsQuery: &session.IDsQuery{Ids: []string{info.ID}}}},
+						&session.SearchQuery{Query: &session.SearchQuery_UserAgentQuery{UserAgentQuery: &session.UserAgentQuery{FingerprintId: gu.Ptr("useragent")}}})
+					return []*sessionAttr{info}
+				},
 			},
 			wantExpirationWindow: time.Minute * 5,
 			wantFactors:          []wantFactor{wantUserFactor},
 			want: &session.ListSessionsResponse{
-				Details: &object.ListDetails{TotalResult: 1, Timestamp: timestamppb.Now()},
+				Details: &object.ListDetails{
+					TotalResult: 1,
+					Timestamp:   timestamppb.Now(),
+				},
 				Sessions: []*session.Session{
 					{
 						Metadata: map[string][]byte{"key": []byte("value")},
@@ -560,7 +637,9 @@ func runListSessionsTestCases(t *testing.T, env listSessionsEnv) {
 							FingerprintId: gu.Ptr("useragent"),
 							Ip:            gu.Ptr("1.2.3.4"),
 							Description:   gu.Ptr("Description"),
-							Header:        map[string]*session.UserAgent_HeaderValues{"foo": {Values: []string{"foo", "bar"}}},
+							Header: map[string]*session.UserAgent_HeaderValues{
+								"foo": {Values: []string{"foo", "bar"}},
+							},
 						},
 					},
 				},
@@ -568,51 +647,65 @@ func runListSessionsTestCases(t *testing.T, env listSessionsEnv) {
 		},
 		{
 			name: "list sessions, wrong useragent",
-			ctx:  env.ownerCtx,
-			req:  &session.ListSessionsRequest{},
-			dep: func(t *testing.T, req *session.ListSessionsRequest) []*sessionAttr {
-				info := newSess(t, env.loginCtx, env.testUser.GetUserId(), "useragent", durationpb.New(time.Minute*5), map[string][]byte{"key": []byte("value")})
-				req.Queries = append(req.Queries,
-					&session.SearchQuery{Query: &session.SearchQuery_IdsQuery{IdsQuery: &session.IDsQuery{Ids: []string{info.ID}}}},
-					&session.SearchQuery{Query: &session.SearchQuery_UserAgentQuery{UserAgentQuery: &session.UserAgentQuery{FingerprintId: gu.Ptr("wronguseragent")}}})
-				return []*sessionAttr{}
+			args: args{
+				IAMOwnerCTX,
+				&session.ListSessionsRequest{},
+				func(ctx context.Context, t *testing.T, request *session.ListSessionsRequest) []*sessionAttr {
+					info := createSession(ctx, t, User.GetUserId(), "useragent", durationpb.New(time.Minute*5), map[string][]byte{"key": []byte("value")})
+					request.Queries = append(request.Queries,
+						&session.SearchQuery{Query: &session.SearchQuery_IdsQuery{IdsQuery: &session.IDsQuery{Ids: []string{info.ID}}}},
+						&session.SearchQuery{Query: &session.SearchQuery_UserAgentQuery{UserAgentQuery: &session.UserAgentQuery{FingerprintId: gu.Ptr("wronguseragent")}}})
+					return []*sessionAttr{}
+				},
 			},
+			wantExpirationWindow: time.Minute * 5,
+			wantFactors:          []wantFactor{wantUserFactor},
 			want: &session.ListSessionsResponse{
-				Details:  &object.ListDetails{TotalResult: 0, Timestamp: timestamppb.Now()},
+				Details: &object.ListDetails{
+					TotalResult: 0,
+					Timestamp:   timestamppb.Now(),
+				},
 				Sessions: []*session.Session{},
 			},
 		},
 		{
 			name: "list sessions, empty useragent",
-			ctx:  env.ownerCtx,
-			req:  &session.ListSessionsRequest{},
-			dep: func(t *testing.T, req *session.ListSessionsRequest) []*sessionAttr {
-				req.Queries = append(req.Queries,
-					&session.SearchQuery{Query: &session.SearchQuery_UserAgentQuery{UserAgentQuery: &session.UserAgentQuery{FingerprintId: gu.Ptr("")}}})
-				return []*sessionAttr{}
+			args: args{
+				IAMOwnerCTX,
+				&session.ListSessionsRequest{},
+				func(ctx context.Context, t *testing.T, request *session.ListSessionsRequest) []*sessionAttr {
+					request.Queries = append(request.Queries,
+						&session.SearchQuery{Query: &session.SearchQuery_UserAgentQuery{UserAgentQuery: &session.UserAgentQuery{FingerprintId: gu.Ptr("")}}})
+					return []*sessionAttr{}
+				},
 			},
-			wantErr: true,
+			wantExpirationWindow: time.Minute * 5,
+			wantFactors:          []wantFactor{wantUserFactor},
+			wantErr:              true,
 		},
 		{
 			name: "list sessions, expiration date query, ok",
-			ctx:  env.ownerCtx,
-			req:  &session.ListSessionsRequest{},
-			dep: func(t *testing.T, req *session.ListSessionsRequest) []*sessionAttr {
-				info := newSess(t, env.loginCtx, env.testUser.GetUserId(), "useragent", durationpb.New(time.Minute*5), map[string][]byte{"key": []byte("value")})
-				req.Queries = append(req.Queries,
-					&session.SearchQuery{Query: &session.SearchQuery_IdsQuery{IdsQuery: &session.IDsQuery{Ids: []string{info.ID}}}},
-					&session.SearchQuery{Query: &session.SearchQuery_ExpirationDateQuery{
-						ExpirationDateQuery: &session.ExpirationDateQuery{
-							ExpirationDate: timestamppb.Now(),
-							Method:         objpb.TimestampQueryMethod_TIMESTAMP_QUERY_METHOD_GREATER_OR_EQUALS,
-						},
-					}})
-				return []*sessionAttr{info}
+			args: args{
+				IAMOwnerCTX,
+				&session.ListSessionsRequest{},
+				func(ctx context.Context, t *testing.T, request *session.ListSessionsRequest) []*sessionAttr {
+					info := createSession(ctx, t, User.GetUserId(), "useragent", durationpb.New(time.Minute*5), map[string][]byte{"key": []byte("value")})
+					request.Queries = append(request.Queries,
+						&session.SearchQuery{Query: &session.SearchQuery_IdsQuery{IdsQuery: &session.IDsQuery{Ids: []string{info.ID}}}},
+						&session.SearchQuery{Query: &session.SearchQuery_ExpirationDateQuery{
+							ExpirationDateQuery: &session.ExpirationDateQuery{ExpirationDate: timestamppb.Now(),
+								Method: objpb.TimestampQueryMethod_TIMESTAMP_QUERY_METHOD_GREATER_OR_EQUALS,
+							}}})
+					return []*sessionAttr{info}
+				},
 			},
 			wantExpirationWindow: time.Minute * 5,
 			wantFactors:          []wantFactor{wantUserFactor},
 			want: &session.ListSessionsResponse{
-				Details: &object.ListDetails{TotalResult: 1, Timestamp: timestamppb.Now()},
+				Details: &object.ListDetails{
+					TotalResult: 1,
+					Timestamp:   timestamppb.Now(),
+				},
 				Sessions: []*session.Session{
 					{
 						Metadata: map[string][]byte{"key": []byte("value")},
@@ -620,22 +713,23 @@ func runListSessionsTestCases(t *testing.T, env listSessionsEnv) {
 							FingerprintId: gu.Ptr("useragent"),
 							Ip:            gu.Ptr("1.2.3.4"),
 							Description:   gu.Ptr("Description"),
-							Header:        map[string]*session.UserAgent_HeaderValues{"foo": {Values: []string{"foo", "bar"}}},
+							Header: map[string]*session.UserAgent_HeaderValues{
+								"foo": {Values: []string{"foo", "bar"}},
+							},
 						},
 					},
 				},
 			},
 		},
 	}
-
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			infos := tt.dep(t, tt.req)
+			infos := tt.args.dep(LoginCTX, t, tt.args.req)
 
-			retryDuration, tick := integration.WaitForAndTickWithMaxDuration(tt.ctx, 30*time.Second)
+			retryDuration, tick := integration.WaitForAndTickWithMaxDuration(tt.args.ctx, time.Minute)
 			require.EventuallyWithT(t, func(ttt *assert.CollectT) {
-				got, err := env.client.ListSessions(tt.ctx, tt.req)
+				got, err := Client.ListSessions(tt.args.ctx, tt.args.req)
 				if tt.wantErr {
 					assert.Error(ttt, err)
 					return
@@ -655,10 +749,11 @@ func runListSessionsTestCases(t *testing.T, env listSessionsEnv) {
 					tt.want.Sessions[i].CreationDate = infos[i].Details.GetChangeDate()
 					tt.want.Sessions[i].ChangeDate = infos[i].Details.GetChangeDate()
 
+					// only check for contents of the session, not sorting for now
 					found := false
-					for _, s := range got.Sessions {
-						if s.Id == infos[i].ID {
-							verifySession(ttt, s, tt.want.Sessions[i], tt.wantExpirationWindow, infos[i].UserID, tt.wantFactors...)
+					for _, session := range got.Sessions {
+						if session.Id == infos[i].ID {
+							verifySession(ttt, session, tt.want.Sessions[i], tt.wantExpirationWindow, infos[i].UserID, tt.wantFactors...)
 							found = true
 						}
 					}
@@ -669,19 +764,6 @@ func runListSessionsTestCases(t *testing.T, env listSessionsEnv) {
 			}, retryDuration, tick)
 		})
 	}
-}
-
-func TestServer_ListSessions(t *testing.T) {
-	t.Parallel()
-	runListSessionsTestCases(t, listSessionsEnv{
-		ownerCtx:    IAMOwnerCTX,
-		loginCtx:    LoginCTX,
-		noPermCtx:   UserCTX,
-		client:      Client,
-		loginUserID: Instance.Users.Get(integration.UserTypeLogin).ID,
-		testUser:    User,
-		newUser:     func(ctx context.Context) *user.AddHumanUserResponse { return Instance.CreateHumanUser(ctx) },
-	})
 }
 
 func TestServer_ListSessions_with_expiration_date_filter(t *testing.T) {
@@ -741,4 +823,3 @@ func TestServer_ListSessions_with_expiration_date_filter(t *testing.T) {
 	require.Len(t, listSessionsResponse2.Sessions, 1)
 	assert.Equal(t, session2.SessionId, listSessionsResponse2.Sessions[0].Id)
 }
-

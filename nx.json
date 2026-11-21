@@ -16,8 +16,7 @@
     "nx:run-commands": {
       "options": {
         "env": {
-          "COREPACK_ENABLE_DOWNLOAD_PROMPT": "0",
-          "ENABLE_EXPERIMENTAL_COREPACK": "1"
+          "COREPACK_ENABLE_DOWNLOAD_PROMPT": "0"
         }
       }
     },
@@ -67,6 +66,5 @@
       ],
       "cache": true
     }
-  },
-  "analytics": false
+  }
 }

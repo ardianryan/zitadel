@@ -328,6 +328,7 @@ Errors:
       APIAuthMethodNoSecret: "Vybraná API Auth metoda nevyžaduje tajný klíč"
       AuthMethodNoPrivateKeyJWT: "Vybraná metoda ověření nevyžaduje klíč"
       ClientSecretInvalid: "Tajný klíč klienta je neplatný"
+      ClientSecretNotSet: "Tajný klíč klienta není nastaven"
       Key:
         AlreadyExisting: "Klíč aplikace již existuje"
         NotFound: "Klíč aplikace nebyl nalezen"
@@ -540,6 +541,7 @@ Errors:
     NotExisting: "Požadavek na autentizaci neexistuje"
     WrongLoginClient: "Požadavek na autentizaci vytvořen jiným klientem přihlášení"
     AlreadyHandled: "Žádost o ověření již byla zpracována"
+    NotAuthenticated: "Uživatel není ověřen"
   OIDCSession:
     RefreshTokenInvalid: "Obnovovací token je neplatný"
     Token:

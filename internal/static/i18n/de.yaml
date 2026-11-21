@@ -328,6 +328,7 @@ Errors:
       APIAuthMethodNoSecret: "Gewählte API Auth Method benötigt kein Secret"
       AuthMethodNoPrivateKeyJWT: "Gewählte Auth Method benötigt keinen Key"
       ClientSecretInvalid: "Client Secret ist ungültig"
+      ClientSecretNotSet: "Das Client-Geheimnis ist nicht festgelegt"
       Key:
         AlreadyExisting: "Applikationsschlüssel existiert bereits"
         NotFound: "Applikationsschlüssel nicht gefunden"
@@ -542,6 +543,7 @@ Errors:
     NotExisting: "Auth Request existiert nicht"
     WrongLoginClient: "Auth Request wurde von einem anderen Login-Anwendung erstellt"
     AlreadyHandled: "Auth Request wurde bereits bearbeitet"
+    NotAuthenticated: "Benutzer ist nicht authentifiziert"
   OIDCSession:
     RefreshTokenInvalid: "Refresh Token ist ungültig"
     Token:

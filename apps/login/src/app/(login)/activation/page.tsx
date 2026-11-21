@@ -1,9 +1,9 @@
 import { DynamicTheme } from "@/components/dynamic-theme";
 import { ActivationHelpCard } from "@/components/edu/activation-help-card";
 import { resolveLocalizedLegalLink } from "@/lib/legal-links";
-import { getServiceConfig } from "@/lib/service-url";
-import { loadMostRecentSession } from "@/lib/session";
-import { getBrandingSettings, getDefaultOrg, getLegalAndSupportSettings, getOrgById } from "@/lib/zitadel";
+import { getServiceConfig } from "@/lib/server/service-url";
+import { loadMostRecentSession } from "@/lib/server/session";
+import { getBrandingSettings, getDefaultOrg, getLegalAndSupportSettings, getOrgById } from "@/lib/server/zitadel";
 import { Organization } from "@zitadel/proto/zitadel/org/v2/org_pb";
 import { Metadata } from "next";
 import { getLocale, getTranslations } from "next-intl/server";

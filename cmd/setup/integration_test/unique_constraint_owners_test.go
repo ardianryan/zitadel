@@ -71,10 +71,12 @@ func TestBackfillUniqueConstraintOwners_UsernameInstanceScopedOrg(t *testing.T) 
 		) VALUES ($2, $2, 1, $1, 1, false, false, false, true, $1, $1)`, instanceID, now)
 	require.NoError(t, err)
 
+	// org-y scopes usernames to the organization through its own domain policy.
 	_, err = dbPool.Exec(CTX, `
-		INSERT INTO `+projection.OrganizationSettingsTable+` (
-			id, creation_date, change_date, resource_owner, instance_id, sequence, organization_scoped_usernames
-		) VALUES ('org-y', $2, $2, 'org-y', $1, 1, true)`, instanceID, now)
+		INSERT INTO `+projection.DomainPolicyTable+` (
+			creation_date, change_date, sequence, id, state, user_login_must_be_domain,
+			validate_org_domains, smtp_sender_address_matches_instance_domain, is_default, resource_owner, instance_id
+		) VALUES ($2, $2, 1, 'org-y', 1, true, false, false, false, 'org-y', $1)`, instanceID, now)
 	require.NoError(t, err)
 
 	query, err := setup.BackfillUniqueConstraintOwnersQuery("02_usernames.sql")
@@ -103,5 +105,4 @@ func cleanupInstance(t *testing.T, instanceID string) {
 	_, _ = dbPool.Exec(CTX, `DELETE FROM `+projection.OrgDomainTable+` WHERE instance_id = $1`, instanceID)
 	_, _ = dbPool.Exec(CTX, `DELETE FROM `+projection.UserTable+` WHERE instance_id = $1`, instanceID)
 	_, _ = dbPool.Exec(CTX, `DELETE FROM `+projection.DomainPolicyTable+` WHERE instance_id = $1`, instanceID)
-	_, _ = dbPool.Exec(CTX, `DELETE FROM `+projection.OrganizationSettingsTable+` WHERE instance_id = $1`, instanceID)
 }

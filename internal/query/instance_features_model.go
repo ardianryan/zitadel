@@ -70,13 +70,11 @@ func (m *InstanceFeaturesReadModel) Query() *eventstore.SearchQueryBuilder {
 			feature_v2.InstanceLoginVersion,
 			feature_v2.InstancePermissionCheckV2,
 			feature_v2.InstanceManagementConsoleUseV2UserApi,
-			feature_v2.InstanceEnableRelationalTables,
 		).
 		Builder().ResourceOwner(m.ResourceOwner)
 }
 
 func (m *InstanceFeaturesReadModel) reduceReset() {
-	m.instance.EnableRelationalTables = FeatureSource[bool]{}
 	if m.populateFromSystem() {
 		return
 	}
@@ -120,8 +118,6 @@ func reduceInstanceFeatureSet[T any](features *InstanceFeatures, event *feature_
 		features.PermissionCheckV2.set(level, event.Value)
 	case feature.KeyConsoleUseV2UserApi:
 		features.ManagementConsoleUseV2UserApi.set(level, event.Value)
-	case feature.KeyEnableRelationalTables:
-		features.EnableRelationalTables.set(level, event.Value)
 	}
 	return nil
 }

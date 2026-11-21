@@ -169,11 +169,6 @@ func (c *Commands) AddUserHuman(ctx context.Context, organizationID string, huma
 		return err
 	}
 
-	organizationScopedUsername, err := c.checkOrganizationScopedUsernames(ctx, organizationID)
-	if err != nil {
-		return err
-	}
-
 	var createCmd humanCreationCommand
 	if human.Register {
 		createCmd = user.NewHumanRegisteredEvent(
@@ -187,7 +182,7 @@ func (c *Commands) AddUserHuman(ctx context.Context, organizationID string, huma
 			human.PreferredLanguage,
 			human.Gender,
 			human.Email.Address,
-			domainPolicy.UserLoginMustBeDomain || organizationScopedUsername,
+			domainPolicy.UserLoginMustBeDomain,
 			human.UserAgentID,
 		)
 	} else {
@@ -202,7 +197,7 @@ func (c *Commands) AddUserHuman(ctx context.Context, organizationID string, huma
 			human.PreferredLanguage,
 			human.Gender,
 			human.Email.Address,
-			domainPolicy.UserLoginMustBeDomain || organizationScopedUsername,
+			domainPolicy.UserLoginMustBeDomain,
 		)
 	}
 
@@ -557,6 +552,14 @@ func (c *Commands) UserHumanWriteModel(ctx context.Context, userID, resourceOwne
 	defer func() { span.EndWithError(err) }()
 
 	writeModel = NewUserHumanWriteModel(userID, resourceOwner, profileWM, emailWM, phoneWM, passwordWM, avatarWM, idpLinksWM, metadataWM)
+	if passwordWM {
+		// Only load the password checks since the last reset of the failed count,
+		// so the cost doesn't grow with every login of the user.
+		writeModel.passwordChecksAfterSequence, err = lastPasswordCheckResetSequence(ctx, c.eventstore, userID)
+		if err != nil {
+			return nil, err
+		}
+	}
 	err = c.eventstore.FilterToQueryReducer(ctx, writeModel)
 	if err != nil {
 		return nil, err

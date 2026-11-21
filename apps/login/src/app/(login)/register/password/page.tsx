@@ -1,7 +1,7 @@
 import { DynamicTheme } from "@/components/dynamic-theme";
 import { SetRegisterPasswordForm } from "@/components/set-register-password-form";
 import { Translated } from "@/components/translated";
-import { getServiceConfig } from "@/lib/service-url";
+import { getServiceConfig } from "@/lib/server/service-url";
 import {
   getBrandingSettings,
   getDefaultOrg,
@@ -9,7 +9,7 @@ import {
   getLoginSettings,
   getOrgById,
   getPasswordComplexitySettings,
-} from "@/lib/zitadel";
+} from "@/lib/server/zitadel";
 import { Organization } from "@zitadel/proto/zitadel/org/v2/org_pb";
 import { headers } from "next/headers";
 

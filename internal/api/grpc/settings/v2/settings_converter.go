@@ -263,10 +263,3 @@ func securitySettingsToCommand(req *settings.SetSecuritySettingsRequest) *comman
 		AllowUnauthenticatedDynamicClientRegistration: req.GetDynamicClientRegistration().GetAllowUnauthenticated(),
 	}
 }
-
-func organizationSettingsToCommand(req *settings.SetOrganizationSettingsRequest) *command.SetOrganizationSettings {
-	return &command.SetOrganizationSettings{
-		OrganizationID:              req.OrganizationId,
-		OrganizationScopedUsernames: req.OrganizationScopedUsernames,
-	}
-}

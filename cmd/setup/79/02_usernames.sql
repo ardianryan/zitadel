@@ -9,14 +9,11 @@ WITH page AS MATERIALIZED (
 batch AS (
 	SELECT u.instance_id, u.id, u.resource_owner, u.username
 	FROM page u
-	LEFT JOIN {{.organization_settings}} s
-		ON s.instance_id = u.instance_id AND s.id = u.resource_owner
 	LEFT JOIN {{.domain_policies}} org_pol
 		ON org_pol.instance_id = u.instance_id AND org_pol.id = u.resource_owner
 	LEFT JOIN {{.domain_policies}} inst_pol
 		ON inst_pol.instance_id = u.instance_id AND inst_pol.is_default
-	WHERE NOT COALESCE(s.organization_scoped_usernames, false)
-		AND NOT COALESCE(org_pol.user_login_must_be_domain, inst_pol.user_login_must_be_domain, false)
+	WHERE NOT COALESCE(org_pol.user_login_must_be_domain, inst_pol.user_login_must_be_domain, false)
 ),
 keys AS (
 	SELECT u.instance_id, u.id, u.resource_owner, u.username AS unique_field

@@ -5,7 +5,6 @@ import (
 
 	"connectrpc.com/connect"
 
-	orgv2 "github.com/zitadel/zitadel/backend/v3/api/org/v2"
 	"github.com/zitadel/zitadel/internal/api/authz"
 	"github.com/zitadel/zitadel/internal/api/grpc/filter/v2"
 	"github.com/zitadel/zitadel/internal/api/grpc/metadata/v2"
@@ -19,11 +18,7 @@ import (
 )
 
 func (s *Server) ListOrganizations(ctx context.Context, req *connect.Request[org.ListOrganizationsRequest]) (*connect.Response[org.ListOrganizationsResponse], error) {
-	if authz.GetFeatures(ctx).EnableRelationalTables {
-		return orgv2.ListOrganizations(ctx, req)
-	}
-
-	queries, err := listOrgRequestToModel(ctx, req)
+	queries, err := listOrgRequestToModel(ctx, s.systemDefaults, req)
 	if err != nil {
 		return nil, err
 	}
@@ -112,8 +107,11 @@ func fieldNameToOrganizationDomainColumn(column org.DomainFieldName) query.Colum
 	}
 }
 
-func listOrgRequestToModel(ctx context.Context, req *connect.Request[org.ListOrganizationsRequest]) (*connect.Response[query.OrgSearchQueries], error) {
-	offset, limit, asc := object.ListQueryToQuery(req.Msg.Query)
+func listOrgRequestToModel(ctx context.Context, defaults systemdefaults.SystemDefaults, req *connect.Request[org.ListOrganizationsRequest]) (*connect.Response[query.OrgSearchQueries], error) {
+	offset, limit, asc, err := object.ListQueryToQuery(defaults, req.Msg.GetQuery())
+	if err != nil {
+		return nil, err
+	}
 	queries, err := orgQueriesToQuery(ctx, req.Msg.Queries)
 	if err != nil {
 		return nil, err
@@ -194,9 +192,10 @@ func fieldNameToOrganizationColumn(fieldName org.OrganizationFieldName) query.Co
 	case org.OrganizationFieldName_ORGANIZATION_FIELD_NAME_CREATION_DATE:
 		return query.OrgColumnCreationDate
 	case org.OrganizationFieldName_ORGANIZATION_FIELD_NAME_UNSPECIFIED:
-		return query.Column{}
+		// sort by the ID by default, so the results can be paginated reliably
+		return query.OrgColumnID
 	default:
-		return query.Column{}
+		return query.OrgColumnID
 	}
 }
 

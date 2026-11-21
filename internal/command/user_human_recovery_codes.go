@@ -148,7 +148,7 @@ func checkRecoveryCode(
 	secretHasher *crypto.Hasher,
 ) ([]eventstore.Command, error) {
 	if code == "" {
-		return nil, zerrors.ThrowInvalidArgument(nil, "COMMAND-u0b6c", "Errors.User.MFA.RecoveryCodes.Empty")
+		return nil, zerrors.ThrowInvalidArgument(nil, "COMMAND-u0b6c", "Errors.User.UserIDMissing")
 	}
 
 	if userID == "" {

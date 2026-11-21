@@ -2,9 +2,10 @@ import { Alert, AlertType } from "@/components/alert";
 import { Button } from "@/components/button";
 import { DynamicTheme } from "@/components/dynamic-theme";
 import { Translated } from "@/components/translated";
+import { isAllowedPostErrorRedirectUrl } from "@/lib/client-utils";
 import { resolveLocalizedLegalLink } from "@/lib/legal-links";
-import { getServiceConfig } from "@/lib/service-url";
-import { getBrandingSettings, getDefaultOrg, getLegalAndSupportSettings, getOrgById } from "@/lib/zitadel";
+import { getServiceConfig } from "@/lib/server/service-url";
+import { getBrandingSettings, getDefaultOrg, getLegalAndSupportSettings, getOrgById } from "@/lib/server/zitadel";
 import { Organization } from "@zitadel/proto/zitadel/org/v2/org_pb";
 import { Metadata } from "next";
 import { getLocale, getTranslations } from "next-intl/server";
@@ -90,7 +91,14 @@ export default async function Page(props: { searchParams: Promise<Record<string 
             </a>
           ) : null}
 
-          <Link href={postErrorRedirectUrl || "/loginname"} className="w-full">
+          <Link
+            href={
+              postErrorRedirectUrl && isAllowedPostErrorRedirectUrl(postErrorRedirectUrl)
+                ? postErrorRedirectUrl
+                : "/loginname"
+            }
+            className="w-full"
+          >
             <Button
               type="button"
               className="w-full rounded-xl border border-slate-200 bg-white py-3 text-center text-xs font-bold text-slate-700 transition-all hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"

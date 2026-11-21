@@ -4,7 +4,7 @@ import { SignInWithIdp } from "@/components/sign-in-with-idp";
 import { UsernameForm } from "@/components/username-form";
 import { getLanguage, Lang, LANGS } from "@/lib/i18n";
 import { resolveLocalizedLegalLink } from "@/lib/legal-links";
-import { getServiceConfig } from "@/lib/service-url";
+import { getServiceConfig } from "@/lib/server/service-url";
 import {
   getActiveIdentityProviders,
   getAllowedLanguages,
@@ -13,7 +13,7 @@ import {
   getLegalAndSupportSettings,
   getLoginSettings,
   getOrgById,
-} from "@/lib/zitadel";
+} from "@/lib/server/zitadel";
 import { Organization } from "@zitadel/proto/zitadel/org/v2/org_pb";
 import { Metadata } from "next";
 import { getLocale, getTranslations } from "next-intl/server";

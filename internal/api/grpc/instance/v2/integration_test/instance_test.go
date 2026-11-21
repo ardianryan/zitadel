@@ -20,35 +20,33 @@ func TestDeleteInstance(t *testing.T) {
 	t.Parallel()
 
 	// Given
-	ctx, cancel := context.WithTimeout(t.Context(), 15*time.Minute)
+	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Minute)
 	defer cancel()
 
 	ctxWithSysAuthZ := integration.WithSystemAuthorization(ctx)
 
 	inst := integration.NewInstance(ctxWithSysAuthZ)
-	instanceOwnerCtx := inst.WithAuthorizationToken(t.Context(), integration.UserTypeIAMOwner)
+	instanceOwnerCtx := inst.WithAuthorizationToken(context.Background(), integration.UserTypeIAMOwner)
 	inst2 := integration.NewInstance(ctxWithSysAuthZ)
 
 	t.Cleanup(func() {
 		inst.Client.InstanceV2.DeleteInstance(ctxWithSysAuthZ, &instance.DeleteInstanceRequest{InstanceId: inst.ID()})
-		inst2.Client.InstanceV2.DeleteInstance(ctxWithSysAuthZ, &instance.DeleteInstanceRequest{InstanceId: inst2.ID()})
 	})
 
 	tt := []struct {
-		testName             string
-		inputRequest         *instance.DeleteInstanceRequest
-		inputContext         context.Context
-		expectedErrorMsg     string
-		expectedErrorCode    codes.Code
-		expectedInstanceID   string
-		expectsNullTimestamp bool
+		testName           string
+		inputRequest       *instance.DeleteInstanceRequest
+		inputContext       context.Context
+		expectedErrorMsg   string
+		expectedErrorCode  codes.Code
+		expectedInstanceID string
 	}{
 		{
 			testName: "when invalid context should return unauthN error",
 			inputRequest: &instance.DeleteInstanceRequest{
 				InstanceId: inst.ID(),
 			},
-			inputContext:      t.Context(),
+			inputContext:      context.Background(),
 			expectedErrorCode: codes.Unauthenticated,
 			expectedErrorMsg:  "auth header missing",
 		},
@@ -57,7 +55,7 @@ func TestDeleteInstance(t *testing.T) {
 			inputRequest: &instance.DeleteInstanceRequest{
 				InstanceId: inst.ID() + "invalid",
 			},
-			inputContext:      t.Context(),
+			inputContext:      context.Background(),
 			expectedErrorCode: codes.Unauthenticated,
 			expectedErrorMsg:  "auth header missing",
 		},
@@ -89,12 +87,13 @@ func TestDeleteInstance(t *testing.T) {
 			expectedErrorMsg:  "No matching permissions found (AUTH-5mWD2)",
 		},
 		{
-			testName: "when invalid id should return no error",
+			testName: "when invalid id should return not found error",
 			inputRequest: &instance.DeleteInstanceRequest{
 				InstanceId: inst.ID() + "invalid",
 			},
-			inputContext:         ctxWithSysAuthZ,
-			expectsNullTimestamp: true,
+			inputContext:      ctxWithSysAuthZ,
+			expectedErrorCode: codes.NotFound,
+			expectedErrorMsg:  "Errors.Instance.NotFound (COMMA-AE3GS)",
 		},
 		{
 			testName: "when delete succeeds should return deletion date",
@@ -116,7 +115,7 @@ func TestDeleteInstance(t *testing.T) {
 			assert.Equal(t, tc.expectedErrorMsg, status.Convert(err).Message())
 			if tc.expectedErrorMsg == "" {
 				require.NotNil(t, res)
-				require.Equal(t, tc.expectsNullTimestamp, res.GetDeletionDate() == nil)
+				require.NotEmpty(t, res.GetDeletionDate())
 			}
 		})
 	}
@@ -138,7 +137,6 @@ func TestUpdateInstance(t *testing.T) {
 
 	t.Cleanup(func() {
 		inst.Client.InstanceV2.DeleteInstance(ctxWithSysAuthZ, &instance.DeleteInstanceRequest{InstanceId: inst.ID()})
-		inst2.Client.InstanceV2.DeleteInstance(ctxWithSysAuthZ, &instance.DeleteInstanceRequest{InstanceId: inst2.ID()})
 	})
 
 	tt := []struct {
@@ -193,7 +191,7 @@ func TestUpdateInstance(t *testing.T) {
 			testName: "when unauthZ context should return unauthZ error",
 			inputRequest: &instance.UpdateInstanceRequest{
 				InstanceId:   inst.ID(),
-				InstanceName: "a valid name",
+				InstanceName: " ",
 			},
 			inputContext:      orgOwnerCtx,
 			expectedErrorCode: codes.NotFound,

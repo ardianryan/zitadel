@@ -3,15 +3,15 @@ import { ChangePasswordForm } from "@/components/change-password-form";
 import { DynamicTheme } from "@/components/dynamic-theme";
 import { Translated } from "@/components/translated";
 import { UserAvatar } from "@/components/user-avatar";
-import { getServiceConfig } from "@/lib/service-url";
-import { loadMostRecentSession } from "@/lib/session";
+import { getServiceConfig } from "@/lib/server/service-url";
+import { loadMostRecentSession } from "@/lib/server/session";
 import {
   getBrandingSettings,
   getDefaultOrg,
   getLegalAndSupportSettings,
   getOrgById,
   getPasswordComplexitySettings,
-} from "@/lib/zitadel";
+} from "@/lib/server/zitadel";
 import { Organization } from "@zitadel/proto/zitadel/org/v2/org_pb";
 import { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
