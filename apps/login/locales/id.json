@@ -517,7 +517,7 @@
   "edu": {
     "portalTagline": "PORTAL LAYANAN IDENTITAS TERPADU",
     "welcome": "Selamat Datang di {orgName}",
-    "singleSignOnTitle": "Single Account, Single Sign On login",
+    "singleSignOnTitle": "Satu Akun untuk Semua Layanan",
     "singleSignOnSubtitle": "Masuk untuk mengakses seluruh ekosistem layanan pembelajaran terpadu.",
     "orSignInWithEmail": "Atau masuk dengan Email / NISN / NIP",
     "helpAndVerification": "Bantuan / Verifikasi Akun",
